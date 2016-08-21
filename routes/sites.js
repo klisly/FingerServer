@@ -452,6 +452,7 @@ router.post('/:id/subscribe',
             } else {
                 data.userId = user._id;
                 data.siteId = site._id;
+                data.userAvatar = user.avatar;
                 data.siteName = site.name;
                 data.seq = req.param('seq')?req.param("seq"):0;
                 User2Site.create(data, function (err, entity) {
@@ -526,6 +527,7 @@ router.put('/:id/subscribe',
                 if (!entity.isBlock) {
                     data.seq = req.body.seq?req.body.seq:0;
                     entity.seq = data.seq;
+                    data.userAvatar = user.avatar;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
                         if (err) {

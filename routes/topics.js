@@ -452,6 +452,7 @@ router.post('/:id/subscribe',
                 }
             } else {
                 data.userId = user._id;
+                data.userAvatar = user.avatar;
                 data.topicId = topic._id;
                 data.topicName = topic.name;
                 data.seq = req.param('seq')?req.param("seq"):0;

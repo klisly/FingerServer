@@ -2,12 +2,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var objectSchema = new Schema({
     userId: { type: String, index: true},
-    userAvatar: String,
-    topicId: String,
-    topicName: String,
+    userAvatar:{type: String},
+    articleId: { type: String, index: true},
+    articleName: String,
     isBlock: {type: Boolean, default: false},
-    seq: { type: Number, default: 0 },
     createAt: { type: Number, default: new Date().getTime() },
     updateAt: { type: Number, default: new Date().getTime() },
 });
-mongoose.model('User2Topic', objectSchema);
+mongoose.model('User2ArticleToRead', objectSchema);

@@ -11,6 +11,11 @@ var objectSchema = new Schema({
     role:{type:Number,default:0}, // 用户角色, 0:用户, 1:作者, 2:超级管理员 3:普通管理员
     isBlock: {type: Boolean, default: false},
     isBasicSet: {type: Boolean, default: false},
+    heartCount:{ type:Number,default:0, index: true},
+    readCount:{ type:Number,default:0, index: true},
+    collectCount:{ type:Number,default:0, index: true},
+    shareCount:{ type:Number,default:0, index: true},
+    toReadCount:{ type:Number,default:0, index: true},
     likeCount:{ type:Number,default:0},
     replyCount: { type: Number, default: 0 },
     followerCount: { type: Number, default: 0 },

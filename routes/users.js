@@ -5,7 +5,11 @@ var User = mongoose.model('User');
 var Article = mongoose.model('Article');
 var User2Topic = mongoose.model('User2Topic');
 var User2Site = mongoose.model('User2Site');
-
+var User2ArticleCollect = mongoose.model('User2ArticleCollect')
+var User2ArticleHeart = mongoose.model('User2ArticleHeart')
+var User2ArticleRead = mongoose.model('User2ArticleRead')
+var User2ArticleToRead = mongoose.model('User2ArticleToRead')
+var User2ArticleShare = mongoose.model('User2ArticleToShare')
 var eventproxy = require('eventproxy');
 var userProxy = require("../proxy/user");
 var getRandomAvatar = require("../utils/avatarutil").getRandomAvatar
@@ -21,6 +25,7 @@ var bodyParser = require('body-parser'); // parses information from POST
 var methodOverride = require('method-override'); //used to manipulate POST
 var DEFAULT_PAGE_SIZE = 20; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
+var MAX_READED_ARTICLE = 30;
 var expires = moment().add(7, 'days').valueOf(); // 7天有效期
 var suphone = "18301441595"
 // 公用校验方法
@@ -127,14 +132,6 @@ router.post('/register', function (req, res, next) {
                 delete userJson["passwd"];
                 delete userJson["salt"];
                 res.format({
-                    //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                    //html: function(){
-                    //  // If it worked, set the header so the address bar doesn't still say /adduser
-                    //  res.location("blobs");
-                    //  // And forward to success page
-                    //  res.redirect("/blobs");
-                    //},
-                    //JSON response will show the newly created blob
                     json: function () {
                         res.json(
                             {
@@ -175,9 +172,6 @@ router.param('id', function (req, res, next, id) {
             });
             //if it is found we continue on
         } else {
-            //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
-            //console.log(blob);
-            // once validation is done save the new item in the req
             req.id = id;
 
             req.user = entity;
@@ -194,12 +188,6 @@ router.get('/:id', function (req, res) {
     delete userJson["passwd"];
     delete userJson["salt"];
     res.format({
-        //html: function(){
-        //  res.render('blobs/show', {
-        //    "blobdob" : blobdob,
-        //    "blob" : blob
-        //  });
-        //},
         json: function () {
             res.json(userJson);
         }
@@ -273,16 +261,6 @@ router.post('/login', function (req, res, next) {
                 delete userJson["__v"];
 
                 res.format({
-                    //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                    //html: function(){
-                    //  // If it worked, set the header so the address bar doesn't still say /adduser
-                    //  res.location("blobs");
-                    //  // And forward to success page
-                    //  res.redirect("/blobs");
-                    //},
-                    //JSON response will show the newly created blob
-
-
                     json: function () {
                         res.json({
                             status: 200,
@@ -409,7 +387,7 @@ router.get('/:id/articles', function (req, res) {
         query.where("updateAt").lt(new Date().getTime());
     }
     query.select('title publishAt author authorId site siteId srcUrl ' +
-        'topics age likeNum commentNum readNum createAt updateAt checked reason isBlock')
+        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock')
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
     query.sort('-updateAt desc');
@@ -418,12 +396,6 @@ router.get('/:id/articles', function (req, res) {
             return next();
         } else {
             res.format({
-                //html: function(){
-                //  res.render('blobs/show', {
-                //    "blobdob" : blobdob,
-                //    "blob" : blob
-                //  });
-                //},
                 json: function () {
                     res.json({
                         status: 200,
@@ -514,10 +486,6 @@ router.put('/',
             } else {
                 //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
                 res.format({
-                    //html: function(){
-                    //  res.redirect("/blobs/" + blob._id);
-                    //},
-                    //JSON responds showing the updated values
                     json: function () {
                         res.json({
                             status: 200,
@@ -556,7 +524,10 @@ router.get('/', function (req, res) {
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforAt;
     var afterAt = req.query.afterAt;
-    console.log("pageSize:" + pageSize + " page:" + page + " beforeAt:" + beforeAt + " afterAt:" + afterAt);
+    var siteId = req.query.siteId;
+    var topicId = req.query.topicId;
+    console.log("pageSize:" + pageSize + " page:" + page
+        + " siteId:" + siteId + " topicId:" + topicId);
 
     var conditions = {};
     var query = User.find(conditions);
@@ -569,9 +540,10 @@ router.get('/', function (req, res) {
     } else {
         query.where("updateAt").lt(new Date().getTime());
     }
-    query.select("_id name brief platform updateAt createAt followingPeople followingTopic" +
-        " followingSite likeCount followingCount followerCount " +
-        "replyCount likeCount isBlock role avatar")
+    query.select("_id name avatar brief role isBlock isBasicSet " +
+        "heartCount readCount collectCount shareCount toReadCount " +
+        " likeCount replyCount followerCount followingSite " +
+        "followingTopic followingPeople createAt updateAt platform")
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
     query.sort('-updateAt desc');
@@ -581,12 +553,6 @@ router.get('/', function (req, res) {
         } else {
             console.log('GET Retrieving ID: ' + req.id + "result:" + entity);
             res.format({
-                // html: function(){
-                //  res.render('blobs/show', {
-                //    "blobdob" : blobdob,
-                //    "blob" : blob
-                //  });
-                // },
                 json: function () {
                     res.json({
                         status: 200,
@@ -619,13 +585,6 @@ router.get('/:uid/topics', function (req, res) {
         var data = {};
         if (entity) {
             res.format({
-                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                //html: function(){
-                //  // If it worked, set the header so the address bar doesn't still say /adduser
-                //  res.location("blobs");
-                //  // And forward to success page
-                //  res.redirect("/blobs");
-                //},
                 json: function () {
                     res.json({
                         status: 200,
@@ -650,7 +609,7 @@ router.get('/:uid/topics', function (req, res) {
  */
 router.get('/:uid/sites', function (req, res) {
     var conditions = {};
-    conditions.userId = req.param('uid');
+    conditions.userId = req.params.uid;
     conditions.isBlock = false;
     User2Site.find(conditions, function (err, entity) {
         if (err) {
@@ -665,13 +624,6 @@ router.get('/:uid/sites', function (req, res) {
         var data = {};
         if (entity) {
             res.format({
-                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                //html: function(){
-                //  // If it worked, set the header so the address bar doesn't still say /adduser
-                //  res.location("blobs");
-                //  // And forward to success page
-                //  res.redirect("/blobs");
-                //},
                 json: function () {
                     res.json({
                         status: 200,
@@ -732,6 +684,206 @@ router.put('/:id/sites/reorder',
         })
 
     });
+
+/**
+ * list read articles
+ */
+router.get('/:uid/reads', function (req, res) {
+    var conditions = {isBlock:false};
+    conditions.userId = req.params.uid;
+    User2ArticleRead.find(conditions)
+        .limit(MAX_READED_ARTICLE)
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
+
+/**
+ * list hearted articles
+ */
+router.get('/:uid/hearts', function (req, res) {
+    var conditions = {isBlock:false};
+    conditions.userId = req.params.uid;
+    User2ArticleHeart.find(conditions)
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
+
+/**
+ * list collect articles
+ */
+router.get('/:uid/collects', function (req, res) {
+    var conditions = {isBlock:false};
+    conditions.userId = req.params.uid;
+    User2ArticleCollect.find(conditions)
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
+
+/**
+ * list collect articles
+ */
+router.get('/:uid/toreads', function (req, res) {
+    var conditions = {isBlock:false};
+    conditions.userId = req.params.uid;
+    var query = User2ArticleToRead.find(conditions);
+        // if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
+        //     query.where("updateAt").gt(afterAt).lt(beforeAt);
+        // } else if (beforeAt > 0) {
+        //     query.where("updateAt").lt(beforeAt);
+        // } else if (afterAt > 0) {
+        //     query.where("updateAt").gt(afterAt);
+        // } else {
+        //     query.where("updateAt").lt(new Date().getTime());
+        // };
+        query.exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
+
+/**
+ * list collect articles
+ */
+router.get('/:uid/shares', function (req, res) {
+    var conditions = {isBlock:false};
+    conditions.userId = req.params.uid;
+    User2ArticleShare.find(conditions)
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
 
 
 module.exports = router;

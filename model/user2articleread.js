@@ -1,13 +1,12 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var objectSchema = new Schema({
-    userId: { type: String, index: true},
-    userAvatar: String,
-    topicId: String,
-    topicName: String,
+    userId: { type: String, index: true, required:true},
+    userAvatar:{type: String},
+    articleId: { type: String, index: true, required:true},
+    articleName: String,
     isBlock: {type: Boolean, default: false},
-    seq: { type: Number, default: 0 },
     createAt: { type: Number, default: new Date().getTime() },
     updateAt: { type: Number, default: new Date().getTime() },
 });
-mongoose.model('User2Topic', objectSchema);
+mongoose.model('User2ArticleRead', objectSchema);
