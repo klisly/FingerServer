@@ -15,6 +15,19 @@ exports.getUserByLoginName = function (loginName, callback) {
 
 
 /**
+ * 根据昵称查找用户
+ * Callback:
+ * - err, 数据库异常
+ * - user, 用户
+ * @param {String} loginName 登录名
+ * @param {Function} callback 回调函数
+ */
+exports.getUserByName = function (loginName, callback) {
+    collection.findOne({'name': loginName}, callback);
+};
+
+
+/**
  * 根据关键字，获取一组用户
  * Callback:
  * - err, 数据库异常

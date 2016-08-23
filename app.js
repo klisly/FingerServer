@@ -18,12 +18,7 @@ var user2topic = require("./model/user2topic");
 var article = require("./model/article");
 var author = require("./model/user");
 var user2site = require("./model/user2site");
-var user2articlecollect = require("./model/user2articlecollect");
-var user2articleheart = require("./model/user2articleheart");
-var user2articleread = require("./model/user2articleread");
-var user2articleshare = require("./model/user2articleshare");
-var user2articletoread = require("./model/user2articletoread");
-
+var user2article = require("./model/user2article");
 var app = express();
 
 // view engine setup

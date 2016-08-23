@@ -3,11 +3,7 @@ var mongoose = require('mongoose');
 var Article = mongoose.model('Article');
 var User = mongoose.model('User');
 
-var User2ArticleCollect = mongoose.model('User2ArticleCollect')
-var User2ArticleHeart = mongoose.model('User2ArticleHeart')
-var User2ArticleRead = mongoose.model('User2ArticleRead')
-var User2ArticleShare = mongoose.model('User2ArticleToShare')
-var User2ArticleToRead = mongoose.model('User2ArticleToRead')
+var User2Article = mongoose.model('User2Article')
 var validateToken = require("../utils/authutil").validateToken;
 var requireAuth = require("../utils/authutil").requireAuth;
 var validateRole = require("../utils/authutil").validateRole;
@@ -203,27 +199,49 @@ router.param('id', function (req, res, next, id) {
     });
 });
 
-router.get('/:id', function (req, res) {
-    var uid = req.query.uid;
-    res.format({
-        json: function () {
-            res.json({
-                status: 200,
-                data: req.article
-            });
-        }
+router.get('/:id', function (req, res, next) {
+    var ep = new eventproxy();
+    ep.fail(next);
+    ep.on(pro_error, function (msg) {
+        res.status(400).json({
+            status: 40003,
+            msg: msg,
+        })
     });
+    var data = {
+        'article':req.article
+    }
+    ep.on("success", function () {
+        res.format({
+            json: function () {
+                res.json({
+                    status: 200,
+                    data: data,
+                });
+            }
+        });
+    });
+
+    var uid = req.query.uid;
+    User2Article.findOne({"userId":uid, "articleId":req.id}, function (err, entity) {
+        console.log("User2ArticleCollect entity:"+entity);
+        if(entity){
+            data.user2article = entity;
+        }
+        ep.emit("success");
+    });
+    Article.update({"_id":req.id}, {"$inc":{"readCount":1} }).exec();
     if(uid){
         User.update({'_id':uid}, {'$inc':{'readCount':1}}).exec();
-        User2ArticleRead.findOne({"userId":uid, "articleId":req.id}, function (err, entity) {
+        User2Article.findOne({"userId":uid, "articleId":req.id}, function (err, entity) {
             console.log("add read article");
             if(!entity){
-                Article.update({"_id":req.id}, {"$inc":{"readCount":1} }).exec();
                 var data = {"userId":uid, "articleId":req.id, "articleName":req.article.title};
                 if (req.body.userAvatar) {
                     data.userAvatar = validator.trim(req.body.userAvatar);
                 }
-                var read = new User2ArticleRead(data);
+                data.read = true;
+                var read = new User2Article(data);
                 read.save();
             }
         });
@@ -352,15 +370,17 @@ router.post('/:id/heart',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleHeart.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 return next();
             }
             var data = {};
             if (entity) {
-                if (entity.isBlock) {
+                if (entity.isBlock || entity.heart == false) {
                     data.isBlock = false;
+                    data.heart = true;
                     entity.isBlock = false;
+                    entity.heart = true;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
                         if (err) {
@@ -398,7 +418,8 @@ router.post('/:id/heart',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
-                User2ArticleHeart.create(data, function (err, entity) {
+                data.heart = true;
+                User2Article.create(data, function (err, entity) {
                     if (err) {
                         console.log(err);
                         res.status(500).json(
@@ -442,7 +463,7 @@ router.post('/:id/unheart',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-         User2ArticleHeart.findOne(conditions, function (err, entity) {
+         User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 res.status(500).json(
                     {
@@ -454,8 +475,10 @@ router.post('/:id/unheart',
             }
             var data = {};
             if (entity) {
-                if (!entity.isBlock) {
+                if (!entity.isBlock || entity.heart == true) {
                     data.isBlock = true;
+                    data.heart = false;
+                    entity.heart = false;
                     entity.isBlock = true;
                     entity.update(data, function (err, resData) {
                         if (err) {
@@ -511,14 +534,16 @@ router.post('/:id/toread',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleToRead.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 return next();
             }
             var data = {};
             if (entity) {
-                if (entity.isBlock) {
+                if (entity.isBlock || entity.toread == false) {
                     data.isBlock = false;
+                    data.toread = true;
+                    entity.toread = true;
                     entity.isBlock = false;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
@@ -556,7 +581,8 @@ router.post('/:id/toread',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
-                User2ArticleToRead.create(data, function (err, entity) {
+                data.toread = true;
+                User2Article.create(data, function (err, entity) {
                     if (err) {
                         console.log(err);
                         res.status(500).json(
@@ -592,7 +618,7 @@ router.post('/:id/untoread',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleToRead.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 res.status(500).json(
                     {
@@ -604,8 +630,10 @@ router.post('/:id/untoread',
             }
             var data = {};
             if (entity) {
-                if (!entity.isBlock) {
+                if (!entity.isBlock || entity.toread == true) {
                     data.isBlock = true;
+                    data.toread = false;
+                    entity.toread = false;
                     entity.isBlock = true;
                     entity.update(data, function (err, resData) {
                         if (err) {
@@ -661,14 +689,16 @@ router.post('/:id/collect',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleCollect.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 return next();
             }
             var data = {};
             if (entity) {
-                if (entity.isBlock) {
+                if (entity.isBlock || entity.collect == false) {
                     data.isBlock = false;
+                    data.collect = true;
+                    entity.collect = true;
                     entity.isBlock = false;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
@@ -707,7 +737,8 @@ router.post('/:id/collect',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
-                User2ArticleCollect.create(data, function (err, entity) {
+                data.collect = true;
+                User2Article.create(data, function (err, entity) {
                     if (err) {
                         console.log(err);
                         res.status(500).json(
@@ -744,7 +775,7 @@ router.post('/:id/uncollect',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleCollect.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 res.status(500).json(
                     {
@@ -756,8 +787,10 @@ router.post('/:id/uncollect',
             }
             var data = {};
             if (entity) {
-                if (!entity.isBlock) {
+                if (!entity.isBlock || entity.collect == true) {
                     data.isBlock = true;
+                    data.collect = false;
+                    entity.collect = false;
                     entity.isBlock = true;
                     entity.update(data, function (err, resData) {
                         if (err) {
@@ -813,7 +846,7 @@ router.post('/:id/share',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-        User2ArticleShare.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 return next();
             }
@@ -823,7 +856,8 @@ router.post('/:id/share',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
-                User2ArticleShare.create(data, function (err, entity) {
+                data.share = true;
+                User2Article.create(data, function (err, entity) {
                     if (err) {
                         console.log(err);
                         res.status(500).json(
@@ -846,14 +880,30 @@ router.post('/:id/share',
                     }
                 })
             } else {
-                res.format({
-                    json: function () {
-                        res.json({
-                            status: 200,
-                            data: entity
+                data = {};
+                data.share = true;
+                entity.share = true;
+                entity.update(data, function (err, resData) {
+                    if (err) {
+                        res.status(500).json(
+                            {
+                                status: 500,
+                                message: err.message
+                            }
+                        );
+                    } else {
+                        res.format({
+                            json: function () {
+                                res.json({
+                                    status: 200,
+                                    data: entity
+                                });
+                            }
                         });
+                        user.update({shareCount: user.shareCount + 1}, function (err, data) {});
+                        article.update({shareCount: user.shareCount + 1}, function (err, data) {});
                     }
-                });
+                })
             }
         })
     });

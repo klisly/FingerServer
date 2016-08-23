@@ -5,11 +5,7 @@ var User = mongoose.model('User');
 var Article = mongoose.model('Article');
 var User2Topic = mongoose.model('User2Topic');
 var User2Site = mongoose.model('User2Site');
-var User2ArticleCollect = mongoose.model('User2ArticleCollect')
-var User2ArticleHeart = mongoose.model('User2ArticleHeart')
-var User2ArticleRead = mongoose.model('User2ArticleRead')
-var User2ArticleToRead = mongoose.model('User2ArticleToRead')
-var User2ArticleShare = mongoose.model('User2ArticleToShare')
+var User2Article = mongoose.model('User2Article')
 var eventproxy = require('eventproxy');
 var userProxy = require("../proxy/user");
 var getRandomAvatar = require("../utils/avatarutil").getRandomAvatar
@@ -55,8 +51,8 @@ router.post('/register', function (req, res, next) {
         passwd = validator.trim(req.body.passwd);
     }
     var name = ""
-    if (req.body.nickname !== undefined) {
-        name = validator.trim(req.body.nickname);
+    if (req.body.name !== undefined) {
+        name = validator.trim(req.body.name);
     } else {
         name = loginname;
     }
@@ -97,58 +93,63 @@ router.post('/register', function (req, res, next) {
         ep.emit(pro_error, "简述太短了");
         return;
     }
-
-    userProxy.getUserByLoginName(loginname, function (err, entity) {
-        if (err) {
-            return next(err);
-        }
-        console.log("find user done, loginname:" + loginname + " count:" + entity);
-        if (entity) {
-            ep.emit(pro_error, '手机号已经已被使用。');
-            return;
-        }
-        hash(passwd, function (err, salt, hash) {
-            if (err) {
-                return next(err);
-            }
-            var user = {
-                name: name,
-                loginname: loginname,
-                passwd: hash,
-                brief: brief,
-                avatar: avatar,
-                createAt: Date.now(),
-                updateAt: Date.now(),
-                salt: salt,
-            };
-            console.log(user);
-            User.create(user, function (err, entity) {
+    userProxy.getUserByName(name, function (err, resData) {
+        if (!resData) {
+            userProxy.getUserByLoginName(loginname, function (err, entity) {
                 if (err) {
                     return next(err);
                 }
-                token = genToken(entity._id, expires);
-                var userJson = entity.toJSON();
-                delete userJson["loginname"];
-                delete userJson["passwd"];
-                delete userJson["salt"];
-                res.format({
-                    json: function () {
-                        res.json(
-                            {
-                                status: 200,
-                                data: {
-                                    token: token,
-                                    exp: expires,
-                                    user: userJson
-                                }
-                            }
-                        );
+                console.log("find user done, loginname:" + loginname + " count:" + entity);
+                if (entity) {
+                    ep.emit(pro_error, '手机号已经已被使用。');
+                    return;
+                }
+                hash(passwd, function (err, salt, hash) {
+                    if (err) {
+                        return next(err);
                     }
+                    var user = {
+                        name: name,
+                        loginname: loginname,
+                        passwd: hash,
+                        brief: brief,
+                        avatar: avatar,
+                        createAt: Date.now(),
+                        updateAt: Date.now(),
+                        salt: salt,
+                    };
+                    console.log(user);
+                    User.create(user, function (err, entity) {
+                        if (err) {
+                            return next(err);
+                        }
+                        token = genToken(entity._id, expires);
+                        var userJson = entity.toJSON();
+                        delete userJson["loginname"];
+                        delete userJson["passwd"];
+                        delete userJson["salt"];
+                        res.format({
+                            json: function () {
+                                res.json(
+                                    {
+                                        status: 200,
+                                        data: {
+                                            token: token,
+                                            exp: expires,
+                                            user: userJson
+                                        }
+                                    }
+                                );
+                            }
+                        });
+                    });
                 });
             });
-        });
+        } else {
+            ep.emit(pro_error, "昵称 已经被使用");
+        }
     })
-    ;
+
 })
 
 router.param('id', function (req, res, next, id) {
@@ -475,26 +476,46 @@ router.put('/',
             data.followingPeople = validator.trim(req.body.followingPeople);
             entity.followingPeople = data.followingPeople;
         }
-
-        entity.updateAt = new Date().getTime();
-        data.updateAt = entity.updateAt;
-        entity.update(data, function (err, blobID) {
-            if (err) {
-                var msg = err.message;
-                ep.emit(pro_error, msg);
-                return;
-            } else {
-                //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
-                res.format({
-                    json: function () {
-                        res.json({
-                            status: 200,
-                            data: entity
+        userProxy.getUserByName(data.name, function (err, resData) {
+            if (resData) {
+                try {
+                    var resId = "" + resData._id;
+                } catch (e) {
+                    console.log("resData:" + resData);
+                }
+            }
+            if (entity) {
+                try {
+                    var entityId = "" + entity._id;
+                } catch (e) {
+                    console.log("endity:" + entity);
+                }
+            }
+            if (!resData || resId == entityId) {
+                entity.updateAt = new Date().getTime();
+                data.updateAt = entity.updateAt;
+                entity.update(data, function (err, blobID) {
+                    if (err) {
+                        var msg = err.message;
+                        ep.emit(pro_error, msg);
+                        return;
+                    } else {
+                        //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
+                        res.format({
+                            json: function () {
+                                res.json({
+                                    status: 200,
+                                    data: entity
+                                });
+                            }
                         });
                     }
-                });
+                })
+            } else {
+                ep.emit(pro_error, "昵称 已经被使用");
             }
         })
+
     });
 
 /**
@@ -689,9 +710,10 @@ router.put('/:id/sites/reorder',
  * list read articles
  */
 router.get('/:uid/reads', function (req, res) {
-    var conditions = {isBlock:false};
+    var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
-    User2ArticleRead.find(conditions)
+    conditions.read = true;
+    User2Article.find(conditions)
         .limit(MAX_READED_ARTICLE)
         .exec(function (err, entity) {
             if (err) {
@@ -728,9 +750,10 @@ router.get('/:uid/reads', function (req, res) {
  * list hearted articles
  */
 router.get('/:uid/hearts', function (req, res) {
-    var conditions = {isBlock:false};
+    var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
-    User2ArticleHeart.find(conditions)
+    conditions.heart = true;
+    User2Article.find(conditions)
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(
@@ -766,9 +789,10 @@ router.get('/:uid/hearts', function (req, res) {
  * list collect articles
  */
 router.get('/:uid/collects', function (req, res) {
-    var conditions = {isBlock:false};
+    var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
-    User2ArticleCollect.find(conditions)
+    conditions.collect = true;
+    User2Article.find(conditions)
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(
@@ -804,56 +828,58 @@ router.get('/:uid/collects', function (req, res) {
  * list collect articles
  */
 router.get('/:uid/toreads', function (req, res) {
-    var conditions = {isBlock:false};
+    var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
-    var query = User2ArticleToRead.find(conditions);
-        // if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
-        //     query.where("updateAt").gt(afterAt).lt(beforeAt);
-        // } else if (beforeAt > 0) {
-        //     query.where("updateAt").lt(beforeAt);
-        // } else if (afterAt > 0) {
-        //     query.where("updateAt").gt(afterAt);
-        // } else {
-        //     query.where("updateAt").lt(new Date().getTime());
-        // };
-        query.exec(function (err, entity) {
-            if (err) {
-                res.status(500).json(
-                    {
-                        status: 500,
-                        message: err.message
-                    }
-                );
-                return;
-            }
-            if (entity) {
-                res.format({
-                    json: function () {
-                        res.json({
-                            status: 200,
-                            data: entity
-                        });
-                    }
-                });
-            } else {
-                res.status(404).json(
-                    {
-                        status: 404,
-                        message: "没有找到该记录"
-                    }
-                );
-                return;
-            }
-        });
+    conditions.toread = true;
+    var query = User2Article.find(conditions);
+    // if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
+    //     query.where("updateAt").gt(afterAt).lt(beforeAt);
+    // } else if (beforeAt > 0) {
+    //     query.where("updateAt").lt(beforeAt);
+    // } else if (afterAt > 0) {
+    //     query.where("updateAt").gt(afterAt);
+    // } else {
+    //     query.where("updateAt").lt(new Date().getTime());
+    // };
+    query.exec(function (err, entity) {
+        if (err) {
+            res.status(500).json(
+                {
+                    status: 500,
+                    message: err.message
+                }
+            );
+            return;
+        }
+        if (entity) {
+            res.format({
+                json: function () {
+                    res.json({
+                        status: 200,
+                        data: entity
+                    });
+                }
+            });
+        } else {
+            res.status(404).json(
+                {
+                    status: 404,
+                    message: "没有找到该记录"
+                }
+            );
+            return;
+        }
+    });
 });
 
 /**
  * list collect articles
  */
 router.get('/:uid/shares', function (req, res) {
-    var conditions = {isBlock:false};
+    var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
-    User2ArticleShare.find(conditions)
+    conditions.share = true;
+    User2Article.find(conditions)
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(

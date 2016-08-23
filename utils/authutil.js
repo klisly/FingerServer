@@ -41,7 +41,7 @@ exports.validateToken = function (req, res, next) {
                 .json(
                     {
                         msg: "server error",
-                        code: 500
+                        status: 500
                     }
                 ).end();
             return;
@@ -52,7 +52,7 @@ exports.validateToken = function (req, res, next) {
                 .json(
                     {
                         msg: "token invalid",
-                        code: 40102
+                        status: 40102
                     }
                 )
                 .end();
@@ -61,19 +61,19 @@ exports.validateToken = function (req, res, next) {
             if (token) {
                 try {
                     var decoded = jwt.decode(token, jwtTokenSecret);
-                    console.log("token decod data:" + decoded.iss + " expires:" + decoded.exp);
+                    // console.log("token decod data:" + decoded.iss + " expires:" + decoded.exp);
                     if (decoded.exp <= Date.now()) {
-                        res.status(400)
+                        res.status(401)
                             .json(
                                 {
                                     msg: 'Access token has expired',
-                                    code: 40002
+                                    status: 40103
                                 })
                             .end();
                         return;
                     }
                     userProxy.getUsersById(decoded.iss, function (err, entity) {
-                        console.log("find user from db:" + entity);
+                        // console.log("find user from db:" + entity);
                         if (!err) {
                             req.user = entity;
                             return next();
@@ -110,7 +110,7 @@ exports.requireAuth = function (req, res, next) {
         res.status(401)
             .json({
                 msg: 'not authorized',
-                code: 40101
+                status: 40101
             })
             .end();
     } else {
@@ -129,7 +129,7 @@ exports.validateRole = function (req, res, next) {
         res.status(401)
             .json({
                 msg: '没有权限',
-                code: 40102
+                status: 40102
             })
             .end();
     } else {
