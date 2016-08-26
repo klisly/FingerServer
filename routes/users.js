@@ -56,6 +56,19 @@ router.post('/register', function (req, res, next) {
     } else {
         name = loginname;
     }
+
+    var platform = ""
+    if (req.body.platform !== undefined) {
+        platform = validator.trim(req.body.platform);
+    } else {
+        platform = "LOCAL";
+    }
+
+    var gender = "unknown"
+    if (req.body.gender !== undefined) {
+        gender = validator.trim(req.body.gender);
+    }
+    
     var avatar = getRandomAvatar();
     if (req.body.avatar !== undefined) {
         avatar = validator.trim(req.body.avatar);
@@ -101,7 +114,29 @@ router.post('/register', function (req, res, next) {
                 }
                 console.log("find user done, loginname:" + loginname + " count:" + entity);
                 if (entity) {
-                    ep.emit(pro_error, '手机号已经已被使用。');
+                    if(platform == 'LOCAL'){
+                        ep.emit(pro_error, '手机号已经已被使用。');
+                    } else {
+                        var token = genToken(entity._id, expires);
+                        var userJson = entity.toJSON();
+                        delete userJson["loginname"];
+                        delete userJson["passwd"];
+                        delete userJson["salt"];
+                        res.format({
+                            json: function () {
+                                res.json(
+                                    {
+                                        status: 200,
+                                        data: {
+                                            token: token,
+                                            exp: expires,
+                                            user: userJson
+                                        }
+                                    }
+                                );
+                            }
+                        });
+                    }
                     return;
                 }
                 hash(passwd, function (err, salt, hash) {
@@ -114,6 +149,8 @@ router.post('/register', function (req, res, next) {
                         passwd: hash,
                         brief: brief,
                         avatar: avatar,
+                        platform:platform,
+                        gender:gender,
                         createAt: Date.now(),
                         updateAt: Date.now(),
                         salt: salt,
@@ -146,7 +183,29 @@ router.post('/register', function (req, res, next) {
                 });
             });
         } else {
-            ep.emit(pro_error, "昵称 已经被使用");
+            if(platform == 'LOCAL'){
+                ep.emit(pro_error, "昵称 已经被使用");
+            } else {
+                var token = genToken(entity._id, expires);
+                var userJson = entity.toJSON();
+                delete userJson["loginname"];
+                delete userJson["passwd"];
+                delete userJson["salt"];
+                res.format({
+                    json: function () {
+                        res.json(
+                            {
+                                status: 200,
+                                data: {
+                                    token: token,
+                                    exp: expires,
+                                    user: userJson
+                                }
+                            }
+                        );
+                    }
+                });
+            }
         }
     })
 
@@ -190,7 +249,10 @@ router.get('/:id', function (req, res) {
     delete userJson["salt"];
     res.format({
         json: function () {
-            res.json(userJson);
+            res.json({
+                status: 200,
+                data: userJson,
+            });
         }
     });
 
@@ -476,6 +538,7 @@ router.put('/',
             data.followingPeople = validator.trim(req.body.followingPeople);
             entity.followingPeople = data.followingPeople;
         }
+        console.log("receive data:"+data.name);
         userProxy.getUserByName(data.name, function (err, resData) {
             if (resData) {
                 try {
@@ -714,6 +777,7 @@ router.get('/:uid/reads', function (req, res) {
     conditions.userId = req.params.uid;
     conditions.read = true;
     User2Article.find(conditions)
+        .sort({'updateAt': -1})
         .limit(MAX_READED_ARTICLE)
         .exec(function (err, entity) {
             if (err) {
@@ -754,6 +818,7 @@ router.get('/:uid/hearts', function (req, res) {
     conditions.userId = req.params.uid;
     conditions.heart = true;
     User2Article.find(conditions)
+        .sort({'updateAt': -1})
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(
@@ -793,6 +858,7 @@ router.get('/:uid/collects', function (req, res) {
     conditions.userId = req.params.uid;
     conditions.collect = true;
     User2Article.find(conditions)
+        .sort({'updateAt': -1})
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(
@@ -831,7 +897,7 @@ router.get('/:uid/toreads', function (req, res) {
     var conditions = {isBlock: false};
     conditions.userId = req.params.uid;
     conditions.toread = true;
-    var query = User2Article.find(conditions);
+    var query = User2Article.find(conditions).sort({'updateAt': -1})
     // if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
     //     query.where("updateAt").gt(afterAt).lt(beforeAt);
     // } else if (beforeAt > 0) {
@@ -880,6 +946,7 @@ router.get('/:uid/shares', function (req, res) {
     conditions.userId = req.params.uid;
     conditions.share = true;
     User2Article.find(conditions)
+        .sort({'updateAt': -1})
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(

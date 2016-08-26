@@ -33,7 +33,6 @@ exports.genToken = function (userid, expires) {
 exports.validateToken = function (req, res, next) {
     var parsed_url = url.parse(req.url, true)
     var token = (req.body && req.body.access_token) || parsed_url.query.access_token || req.headers["x-access-token"];
-    console.log("token:" + token);
     redisClient.get(token, function (err, reply) {
         if (err) {
             console.log(err);

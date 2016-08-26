@@ -8,6 +8,7 @@ var objectSchema = new Schema({
     salt:String,
     avatar:{ type: String, default:getRandomAvatar()},
     brief:String,
+    gender:{ type: String, default:'unknown'},
     role:{type:Number,default:0}, // 用户角色, 0:用户, 1:作者, 2:超级管理员 3:普通管理员
     isBlock: {type: Boolean, default: false},
     isBasicSet: {type: Boolean, default: false},
@@ -24,6 +25,6 @@ var objectSchema = new Schema({
     followingPeople: { type: Number, default: 0 },
     createAt: { type: Number, default: new Date().getTime() },
     updateAt: { type: Number, default: new Date().getTime() },
-    platform:{type: String, default: "LOCAL"}
+    platform:{type: String, default: "LOCAL"} // QQ WEIBO WEIXIN LOCAL
 });
 mongoose.model('User', objectSchema);
