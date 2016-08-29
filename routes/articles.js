@@ -31,17 +31,25 @@ router.use(methodOverride(function (req, res) {
  *
  */
 router.get('/', function (req, res) {
-    var pageSize = req.param('pageSize') > 0 ? req.param('pageSize') : DEFAULT_PAGE_SIZE;
-    var page = req.param('page') > 0 ? req.param('page') : DEFAULT_PAGE;
-    var beforeAt = req.param('beforeAt');
-    var afterAt = req.param('afterAt');
-    var type = req.param('type');
-
+    var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
+    var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+    var beforeAt = req.query.beforeAt;
+    var afterAt = req.query.afterAt;
+    var type = req.query.type;
+    console.log("type:"+type);
     console.log("pageSize:" + pageSize + " page:" + page
         + " beforeAt:" + beforeAt + " afterAt:" + afterAt+" type:"+type);
 
-    var conditions = {checked:false};
-    var query = Article.find(conditions);
+    var data = {};
+    if (req.query.siteId) {
+        data.siteId = validator.trim(req.query.siteId);
+        console.log("siteId:"+data.siteId);
+    }
+    if (req.query.topics) {
+        data.topics = validator.trim(req.query.topics);
+        console.log("topics:"+data.topics);
+    }
+    var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("updateAt").gt(afterAt).lt(beforeAt);
     } else if (beforeAt > 0) {
@@ -240,6 +248,8 @@ router.get('/:id', function (req, res, next) {
                 if (req.body.userAvatar) {
                     data.userAvatar = validator.trim(req.body.userAvatar);
                 }
+                data.siteName = req.article.siteName;
+                data.siteId = req.article.siteId;
                 data.read = true;
                 var read = new User2Article(data);
                 read.save();
@@ -418,6 +428,8 @@ router.post('/:id/heart',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
+                data.siteName = article.siteName;
+                data.siteId = article.siteId;
                 data.heart = true;
                 User2Article.create(data, function (err, entity) {
                     if (err) {
@@ -581,6 +593,8 @@ router.post('/:id/toread',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
+                data.siteName = article.siteName;
+                data.siteId = article.siteId;
                 data.toread = true;
                 User2Article.create(data, function (err, entity) {
                     if (err) {
@@ -737,6 +751,8 @@ router.post('/:id/collect',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
+                data.siteName = article.siteName;
+                data.siteId = article.siteId;
                 data.collect = true;
                 User2Article.create(data, function (err, entity) {
                     if (err) {
@@ -856,6 +872,8 @@ router.post('/:id/share',
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
                 data.articleName = article.title;
+                data.siteName = article.siteName;
+                data.siteId = article.siteId;
                 data.share = true;
                 User2Article.create(data, function (err, entity) {
                     if (err) {

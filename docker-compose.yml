@@ -1,0 +1,21 @@
+mongo:
+  image: docker.mimidao.net/mongo:3.3
+  ports:
+    - "27017"
+redis:
+  image: redis:3.0.5
+  ports:
+    - "6379"
+server:
+  build: .
+  environment:
+    - MYSQL_ROOT_PASSWORD
+    - MYSQL_DATABASE
+    - MYSQL_USER
+    - MYSQL_PASSWORD
+  ports:
+    - "3000"
+    - "6000"
+  links:
+    - redis:cache
+    - mongo:mongo

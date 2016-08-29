@@ -3,7 +3,11 @@
  *
  */
 var redis = require('redis');
-var redisClient = redis.createClient(6379);
+var config = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379
+};
+var redisClient = redis.createClient(config);
 
 redisClient.on('error', function (err) {
     console.log('Error ' + err);

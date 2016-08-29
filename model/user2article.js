@@ -5,6 +5,8 @@ var objectSchema = new Schema({
     userAvatar:{type: String},
     articleId: { type: String, index: true},
     articleName: String,
+    siteName:String,
+    siteId:String,
     isBlock: {type: Boolean, default: false},
     share: {type: Boolean, default: false},
     collect: {type: Boolean, default: false},
