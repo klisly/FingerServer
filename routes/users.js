@@ -22,7 +22,6 @@ var methodOverride = require('method-override'); //used to manipulate POST
 var DEFAULT_PAGE_SIZE = 20; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
 var MAX_READED_ARTICLE = 30;
-var expires = moment().add(7, 'days').valueOf(); // 7天有效期
 var suphone = "18301441595"
 // 公用校验方法
 var validateToken = require("../utils/authutil").validateToken;
@@ -316,6 +315,7 @@ router.post('/login', function (req, res, next) {
                 return next(err);
             }
             if (hash == entity.passwd) {
+                var expires = moment().add(7, 'days').valueOf(); // 7天有效期
                 token = genToken(entity._id, expires);
                 var userJson = entity.toJSON();
                 delete userJson["loginname"];

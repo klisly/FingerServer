@@ -146,7 +146,8 @@ router.post('/', function (req, res, next) {
     if (req.body.publishAt) {
         data.publishAt = validator.trim(req.body.publishAt);
     }
-
+    data.createAt = new Date().getTime();
+    data.updateAt = new Date().getTime();
     Article.create(data, function (err, entity) {
         if (err) {
             if (err.code == 11000) {
