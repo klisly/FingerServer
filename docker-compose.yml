@@ -2,18 +2,18 @@ mongo:
   restart: always
   image: mongo:3.3
   ports:
-    - "27017"
+    - "27017:27017"
 redis:
   restart: always
   image: redis:3.0.5
   ports:
-    - "6379"
+    - "6379:6379"
 server:
   restart: always
   build: .
   ports:
-    - "3000"
-    - "6000"
+    - "3000:3000"
+    - "6000:6000"
   links:
     - redis:cache
     - mongo:mongo

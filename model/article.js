@@ -17,7 +17,7 @@ var objectSchema = new Schema({
     shareCount:{ type:Number,default:0, index: true},
     commentCount:{ type:Number,default:0, index: true},
     createAt: { type: Number, default: new Date().getTime() },
-    updateAt: { type: Number, default: new Date().getTime() },
+    updateAt: { index: true, type: Number, default: new Date().getTime() },
     checked:{type:Boolean, default: false},
     reason:{type:String, default:"请稍候小小君审核!"},
     isBlock: {type: Boolean, default: false},

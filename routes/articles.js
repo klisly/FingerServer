@@ -14,7 +14,7 @@ var unfind = "unfind";
 var router = express.Router();
 var bodyParser = require('body-parser'); // parses information from POST
 var methodOverride = require('method-override'); //used to manipulate POST
-var DEFAULT_PAGE_SIZE = 20; // 默认每页数量
+var DEFAULT_PAGE_SIZE = 100; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
 router.use(bodyParser.urlencoded({extended: true}))
 router.use(methodOverride(function (req, res) {
@@ -62,7 +62,7 @@ router.get('/', function (req, res) {
     
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
-    query.sort({'likeCount':-1});
+    query.sort({'likeCount':-1, 'updateAt': -1})
     query.select('title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock')
     query.exec(function (err, entity) {
