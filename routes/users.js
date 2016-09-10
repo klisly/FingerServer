@@ -106,6 +106,7 @@ router.post('/register', function (req, res, next) {
         return;
     }
     userProxy.getUserByName(name, function (err, resData) {
+        var expires = moment().add(7, 'days').valueOf(); // 7天有效期
         if (!resData) {
             userProxy.getUserByLoginName(loginname, function (err, entity) {
                 if (err) {
