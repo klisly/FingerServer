@@ -3,7 +3,7 @@ FROM node:5.3.0
 WORKDIR /usr/src/app
 
 COPY package.json ./package.json
-RUN npm install && rm -rf /tmp/npm-*
+RUN npm --registry=https://registry.npm.taobao.org install && rm -rf /tmp/npm-*
 COPY . ./
 
 ENV NODE_ENV=production
