@@ -2,7 +2,7 @@ var express = require('express');
 var mongoose = require('mongoose');
 var Article = mongoose.model('Article');
 var User = mongoose.model('User');
-
+var randomInt = require('random-integral');
 var User2Article = mongoose.model('User2Article')
 var validateToken = require("../utils/authutil").validateToken;
 var requireAuth = require("../utils/authutil").requireAuth;
@@ -135,15 +135,29 @@ router.post('/', function (req, res, next) {
     if (req.body.age) {
         data.age = validator.trim(req.body.age);
     }
+    
+    if (req.body.heartCount) {
+        data.heartCount = validator.trim(req.body.heartCount);
+    } else {
+        data.heartCount = randomInt({ min: 10, max: 80 });
+    }
 
-    if (req.body.likeNum) {
-        data.likeNum = validator.trim(req.body.likeNum);
+    if (req.body.readCount) {
+        data.readCount = validator.trim(req.body.readCount);
+    } else {
+        data.heartCount = randomInt({ min: 50, max: 200 });
     }
-    if (req.body.commentNum) {
-        data.commentNum = validator.trim(req.body.commentNum);
+
+    if (req.body.collectCount) {
+        data.collectCount = validator.trim(req.body.collectCount);
+    } else {
+        data.collectCount = randomInt({ min: 5, max: 50 });
     }
-    if (req.body.readNum) {
-        data.readNum = validator.trim(req.body.readNum);
+
+    if (req.body.shareCount) {
+        data.shareCount = validator.trim(req.body.shareCount);
+    } else {
+        data.shareCount = randomInt({ min: 0, max: 20 });
     }
 
     if (req.body.publishAt) {

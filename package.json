@@ -26,6 +26,7 @@
     "morgan": "~1.6.1",
     "passport": "^0.3.2",
     "passport-local": "^1.0.0",
+    "random-integral": "^1.0.3",
     "redis": "^2.6.2",
     "serve-favicon": "~2.3.0",
     "validator": "^5.2.0"
