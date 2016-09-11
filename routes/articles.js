@@ -65,8 +65,10 @@ router.get('/', function (req, res) {
     query.sort({'likeCount':-1, 'updateAt': -1})
     query.select('title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock')
+    console.log("start query");
     query.exec(function (err, entity) {
         if (err) {
+            console.log("query result: err:"+JSON.stringify(err));
             res.format({
                 json: function () {
                     res.json({
@@ -76,6 +78,7 @@ router.get('/', function (req, res) {
                 }
             });
         } else {
+            console.log("query result: size:"+entity.length)
             res.format({
                 json: function () {
                     res.status(200).json({
