@@ -145,7 +145,7 @@ router.post('/', function (req, res, next) {
     if (req.body.readCount) {
         data.readCount = validator.trim(req.body.readCount);
     } else {
-        data.heartCount = randomInt({ min: 50, max: 200 });
+        data.readCount = randomInt({ min: 50, max: 200 });
     }
 
     if (req.body.collectCount) {
