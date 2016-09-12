@@ -186,8 +186,8 @@ router.post('/register', function (req, res, next) {
             if(platform == 'LOCAL'){
                 ep.emit(pro_error, "昵称 已经被使用");
             } else {
-                var token = genToken(entity._id, expires);
-                var userJson = entity.toJSON();
+                var token = genToken(resData._id, expires);
+                var userJson = resData.toJSON();
                 delete userJson["loginname"];
                 delete userJson["passwd"];
                 delete userJson["salt"];
