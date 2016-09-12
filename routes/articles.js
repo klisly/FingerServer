@@ -14,7 +14,8 @@ var unfind = "unfind";
 var router = express.Router();
 var bodyParser = require('body-parser'); // parses information from POST
 var methodOverride = require('method-override'); //used to manipulate POST
-var DEFAULT_PAGE_SIZE = 100; // 默认每页数量
+var common = new require("../utils/commonutils");
+var DEFAULT_PAGE_SIZE = 50; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
 router.use(bodyParser.urlencoded({extended: true}))
 router.use(methodOverride(function (req, res) {
@@ -25,7 +26,7 @@ router.use(methodOverride(function (req, res) {
         return method
     }
 }))
-
+var pageNum = undefined;
 /**
  * 支持分页查询
  *
@@ -36,19 +37,28 @@ router.get('/', function (req, res) {
     var beforeAt = req.query.beforeAt;
     var afterAt = req.query.afterAt;
     var type = req.query.type;
-    console.log("type:"+type);
+    console.log("type:" + type);
     console.log("pageSize:" + pageSize + " page:" + page
-        + " beforeAt:" + beforeAt + " afterAt:" + afterAt+" type:"+type);
+        + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " type:" + type);
 
     var data = {};
     if (req.query.siteId) {
         data.siteId = validator.trim(req.query.siteId);
-        console.log("siteId:"+data.siteId);
+        console.log("siteId:" + data.siteId);
     }
     if (req.query.topics) {
         data.topics = validator.trim(req.query.topics);
-        console.log("topics:"+data.topics);
+        console.log("topics:" + data.topics);
     }
+    Article.count({}, function (err, data) {
+        console.log("num:" + data);
+        pageNum = data
+    })
+    var count = (pageNum == undefined ? 100 : pageNum) / pageSize;
+    if (type != undefined) {
+        page = common.getRandomNum(1, count);
+    }
+    console.log("page:" + page)
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -59,16 +69,22 @@ router.get('/', function (req, res) {
     } else {
         query.where("updateAt").lt(new Date().getTime());
     }
-    
+
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
-    query.sort({'likeCount':-1, 'updateAt': -1})
+    if (type == "hot") {
+        query.sort({'heartCount': -1})
+    } else if (type == "hot") {
+        query.sort({'collectCount': -1})
+    } else {
+        query.sort({'updateAt': -1})
+    }
     query.select('title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock')
     console.log("start query");
     query.exec(function (err, entity) {
         if (err) {
-            console.log("query result: err:"+JSON.stringify(err));
+            console.log("query result: err:" + JSON.stringify(err));
             res.format({
                 json: function () {
                     res.json({
@@ -78,7 +94,7 @@ router.get('/', function (req, res) {
                 }
             });
         } else {
-            console.log("query result: size:"+entity.length)
+            console.log("query result: size:" + entity.length)
             res.format({
                 json: function () {
                     res.status(200).json({
@@ -135,29 +151,29 @@ router.post('/', function (req, res, next) {
     if (req.body.age) {
         data.age = validator.trim(req.body.age);
     }
-    
+
     if (req.body.heartCount) {
         data.heartCount = validator.trim(req.body.heartCount);
     } else {
-        data.heartCount = randomInt({ min: 10, max: 80 });
+        data.heartCount = randomInt({min: 10, max: 80});
     }
 
     if (req.body.readCount) {
         data.readCount = validator.trim(req.body.readCount);
     } else {
-        data.readCount = randomInt({ min: 50, max: 200 });
+        data.readCount = randomInt({min: 50, max: 200});
     }
 
     if (req.body.collectCount) {
         data.collectCount = validator.trim(req.body.collectCount);
     } else {
-        data.collectCount = randomInt({ min: 5, max: 50 });
+        data.collectCount = randomInt({min: 5, max: 50});
     }
 
     if (req.body.shareCount) {
         data.shareCount = validator.trim(req.body.shareCount);
     } else {
-        data.shareCount = randomInt({ min: 0, max: 20 });
+        data.shareCount = randomInt({min: 0, max: 20});
     }
 
     if (req.body.publishAt) {
@@ -235,7 +251,7 @@ router.get('/:id', function (req, res, next) {
         })
     });
     var data = {
-        'article':req.article
+        'article': req.article
     }
     ep.on("success", function () {
         res.format({
@@ -249,20 +265,20 @@ router.get('/:id', function (req, res, next) {
     });
 
     var uid = req.query.uid;
-    User2Article.findOne({"userId":uid, "articleId":req.id}, function (err, entity) {
-        console.log("User2ArticleCollect entity:"+entity);
-        if(entity){
+    User2Article.findOne({"userId": uid, "articleId": req.id}, function (err, entity) {
+        console.log("User2ArticleCollect entity:" + entity);
+        if (entity) {
             data.user2article = entity;
         }
         ep.emit("success");
     });
-    Article.update({"_id":req.id}, {"$inc":{"readCount":1} }).exec();
-    if(uid){
-        User.update({'_id':uid}, {'$inc':{'readCount':1}}).exec();
-        User2Article.findOne({"userId":uid, "articleId":req.id}, function (err, entity) {
+    Article.update({"_id": req.id}, {"$inc": {"readCount": 1}}).exec();
+    if (uid) {
+        User.update({'_id': uid}, {'$inc': {'readCount': 1}}).exec();
+        User2Article.findOne({"userId": uid, "articleId": req.id}, function (err, entity) {
             console.log("add read article");
-            if(!entity){
-                var data = {"userId":uid, "articleId":req.id, "articleName":req.article.title};
+            if (!entity) {
+                var data = {"userId": uid, "articleId": req.id, "articleName": req.article.title};
                 if (req.body.userAvatar) {
                     data.userAvatar = validator.trim(req.body.userAvatar);
                 }
@@ -427,8 +443,10 @@ router.post('/:id/heart',
                                     });
                                 }
                             });
-                            article.update({heartCount: article.heartCount + 1}, function (err, data) {});
-                            user.update({heartCount: user.heartCount + 1}, function (err, data) {});
+                            article.update({heartCount: article.heartCount + 1}, function (err, data) {
+                            });
+                            user.update({heartCount: user.heartCount + 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -474,8 +492,10 @@ router.post('/:id/heart',
                                 });
                             }
                         });
-                        article.update({heartCount: article.heartCount + 1}, function (err, data) {});
-                        user.update({heartCount: user.heartCount + 1}, function (err, data) {});
+                        article.update({heartCount: article.heartCount + 1}, function (err, data) {
+                        });
+                        user.update({heartCount: user.heartCount + 1}, function (err, data) {
+                        });
                     }
                 })
             }
@@ -493,7 +513,7 @@ router.post('/:id/unheart',
         var conditions = {};
         conditions.userId = user._id;
         conditions.articleId = article._id;
-         User2Article.findOne(conditions, function (err, entity) {
+        User2Article.findOne(conditions, function (err, entity) {
             if (err) {
                 res.status(500).json(
                     {
@@ -527,8 +547,10 @@ router.post('/:id/unheart',
                                     });
                                 }
                             });
-                            article.update({heartCount: article.heartCount - 1}, function (err, data) {});
-                            user.update({heartCount: user.heartCount - 1}, function (err, data) {});
+                            article.update({heartCount: article.heartCount - 1}, function (err, data) {
+                            });
+                            user.update({heartCount: user.heartCount - 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -593,7 +615,8 @@ router.post('/:id/toread',
                                     });
                                 }
                             });
-                            user.update({toReadCount: user.toReadCount + 1}, function (err, data) {});
+                            user.update({toReadCount: user.toReadCount + 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -632,7 +655,8 @@ router.post('/:id/toread',
                                 });
                             }
                         });
-                        user.update({toReadCount: user.toReadCount + 1}, function (err, data) {});
+                        user.update({toReadCount: user.toReadCount + 1}, function (err, data) {
+                        });
                     }
                 })
             }
@@ -684,7 +708,8 @@ router.post('/:id/untoread',
                                     });
                                 }
                             });
-                            user.update({toReadCount: user.toReadCount - 1}, function (err, data) {});
+                            user.update({toReadCount: user.toReadCount - 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -750,8 +775,10 @@ router.post('/:id/collect',
                                     });
                                 }
                             });
-                            article.update({collectCount: article.collectCount + 1}, function (err, data) {});
-                            user.update({collectCount: user.collectCount + 1}, function (err, data) {});
+                            article.update({collectCount: article.collectCount + 1}, function (err, data) {
+                            });
+                            user.update({collectCount: user.collectCount + 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -790,8 +817,10 @@ router.post('/:id/collect',
                                 });
                             }
                         });
-                        article.update({collectCount: article.collectCount + 1}, function (err, data) {});
-                        user.update({collectCount: user.collectCount + 1}, function (err, data) {});
+                        article.update({collectCount: article.collectCount + 1}, function (err, data) {
+                        });
+                        user.update({collectCount: user.collectCount + 1}, function (err, data) {
+                        });
                     }
                 })
             }
@@ -843,8 +872,10 @@ router.post('/:id/uncollect',
                                     });
                                 }
                             });
-                            article.update({collectCount: article.collectCount - 1}, function (err, data) {});
-                            user.update({collectCount: user.collectCount - 1}, function (err, data) {});
+                            article.update({collectCount: article.collectCount - 1}, function (err, data) {
+                            });
+                            user.update({collectCount: user.collectCount - 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
@@ -911,8 +942,10 @@ router.post('/:id/share',
                                 });
                             }
                         });
-                        user.update({shareCount: user.shareCount + 1}, function (err, data) {});
-                        article.update({shareCount: user.shareCount + 1}, function (err, data) {});
+                        user.update({shareCount: user.shareCount + 1}, function (err, data) {
+                        });
+                        article.update({shareCount: user.shareCount + 1}, function (err, data) {
+                        });
                     }
                 })
             } else {
@@ -936,8 +969,10 @@ router.post('/:id/share',
                                 });
                             }
                         });
-                        user.update({shareCount: user.shareCount + 1}, function (err, data) {});
-                        article.update({shareCount: user.shareCount + 1}, function (err, data) {});
+                        user.update({shareCount: user.shareCount + 1}, function (err, data) {
+                        });
+                        article.update({shareCount: user.shareCount + 1}, function (err, data) {
+                        });
                     }
                 })
             }
