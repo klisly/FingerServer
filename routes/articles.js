@@ -32,6 +32,7 @@ var pageNum = undefined;
  *
  */
 router.get('/', function (req, res) {
+    // todo newest
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;
@@ -56,7 +57,7 @@ router.get('/', function (req, res) {
     })
     var count = (pageNum == undefined ? 100 : pageNum) / pageSize;
     if (type != undefined) {
-        page = common.getRandomNum(1, count);
+        page = common.getRandomNum(1, count > 2000 ? 2000 : count); // 最大2000页
     }
     console.log("page:" + page)
     var query = Article.find(data);
@@ -74,13 +75,17 @@ router.get('/', function (req, res) {
     query.limit(pageSize * 1);
     if (type == "hot") {
         query.sort({'heartCount': -1})
-    } else if (type == "hot") {
+    } else if (type == "recomend") {
         query.sort({'collectCount': -1})
     } else {
         query.sort({'updateAt': -1})
     }
-    query.select('title publishAt author authorId site siteId srcUrl ' +
-        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock')
+    var sels = 'title publishAt author authorId site siteId srcUrl ' +
+        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
+    if(data.topics == "段子"){
+        sels = sels+" content "
+    }
+    query.select(sels)
     console.log("start query");
     query.exec(function (err, entity) {
         if (err) {
@@ -155,19 +160,19 @@ router.post('/', function (req, res, next) {
     if (req.body.heartCount) {
         data.heartCount = validator.trim(req.body.heartCount);
     } else {
-        data.heartCount = randomInt({min: 10, max: 80});
+        data.heartCount = randomInt({min: 10, max: 20});
     }
 
     if (req.body.readCount) {
         data.readCount = validator.trim(req.body.readCount);
     } else {
-        data.readCount = randomInt({min: 50, max: 200});
+        data.readCount = randomInt({min: 50, max: 2000});
     }
 
     if (req.body.collectCount) {
         data.collectCount = validator.trim(req.body.collectCount);
     } else {
-        data.collectCount = randomInt({min: 5, max: 50});
+        data.collectCount = randomInt({min: 0, max: 15});
     }
 
     if (req.body.shareCount) {
@@ -255,6 +260,9 @@ router.get('/:id', function (req, res, next) {
     }
     ep.on("success", function () {
         res.format({
+            html: function(){
+                res.render('article', data);
+            },
             json: function () {
                 res.json({
                     status: 200,

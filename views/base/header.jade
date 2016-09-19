@@ -24,14 +24,18 @@
         //
         //  </ul>
         //</li>
-        li.active
-          a(href="/") 热门
-        li
-          a(href="/") 推荐
-        li
-          a(href="/") 主题
-        li
-          a(href="/") 站点
+        if location == "topic"
+          li.active
+            a(href="/") 频道
+        else
+          li
+            a(href="/") 频道
+        if location == "site"
+          li.active
+            a(href="/") 站点
+        else
+          li
+            a(href="/") 站点
       ul.nav.navbar-nav.navbar-right
         li
           a(href="/") 登录

@@ -24,7 +24,7 @@ var app = express();
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
-
+app.locals.moment = require('moment');
 var logDirectory = __dirname + "/log";
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);
 var accessLogStream = FileStreamRotator.getStream({
