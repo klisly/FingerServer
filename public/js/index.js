@@ -10,7 +10,13 @@ $(function () {
         }
         var curPage = $("#curpage").text();
         console.log("curPage:"+curPage)
-        var next = parseInt(curPage) + 1;
+        var next = 0;
+        if($(this).text() == "下一页"){
+            next = parseInt(curPage) + 1;
+        } else {
+            next = parseInt(curPage) - 1;
+        }
+
         console.log("next:"+next)
         location.href = "?topic="+$("#tab_nav li.active").text()+"&page="+next;
     })

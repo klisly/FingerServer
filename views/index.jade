@@ -95,7 +95,7 @@ block content
                                                     | #{article.title}
                                             p
                                                 span.text-color-999
-                                                    | #{article.site} • #{article.readCount} 次浏览 • #{moment(article.createAt).format('MM-DD HH:MM')}
+                                                    | #{article.site} • #{article.readCount} 次浏览 • #{moment(article.createAt).utc().zone(-8).format('MM-DD HH:MM')}
                             div.mod-footer
                                 div.page-control
                                     ul.pagination.pull-right
