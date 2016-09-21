@@ -2,6 +2,8 @@ extends default
 block content
     style
         include ../public/css/article.css
+    script
+        include ../public/js/article.js
     div.container
         div.row
             div.aw-content-wrap.clearfix
@@ -11,159 +13,37 @@ block content
                         h1
                             | #{article.title}
                         span.timestamp
-                            | 时间:&nbsp;#{moment(article.createAt).utc().zone(-8).format("MM-DD HH:mm")}&nbsp;&nbsp;&nbsp;&nbsp;来源:&nbsp;#{article.site}
-                        span.srcurl
-
-                            a(href="#{article.srcUrl}")
-                                | 查看原文
+                            | 时间:&nbsp;#{moment(article.createAt).utc().utcOffset(-8).format("MM-DD HH:mm")}&nbsp;&nbsp;&nbsp;&nbsp;来源:&nbsp;#{article.site}
                     div(id="content")
                         |!{article.content}
+                    div.aw-footer
+                        span.srcurl
+                            a(href="#{article.srcUrl}")
+                                | 查看原文
                 <!-- 侧边栏 -->
                 div.col-sm-12.col-md-3.aw-side-bar.hidden-xs.hidden-sm
-                    <div class="aw-mod">
-                    <div class="mod-head">
-                    <h3>专题</h3>
-                    </div>
-                    <div class="mod-body">
-                    <ul>
-                    <li><a href="http://wenda.golaravel.com/feature/1">Composer中国镜像</a></li>
-                    </ul>
-                    </div>
-                    </div>
-                    <div class="aw-mod aw-text-align-justify">
-                    <div class="mod-head">
-                    <a href="http://wenda.golaravel.com/topic/channel-hot" class="pull-right">更多 &gt;</a>
-                    <h3>热门话题</h3>
-                    </div>
-                    <div class="mod-body">
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/topic/laravel5.2"><img alt="" src="http://wenda.golaravel.com/static/common/topic-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <p class="clearfix">
-                    <span class="topic-tag">
-                    <a href="http://wenda.golaravel.com/topic/laravel5.2" class="text" data-id="1091">laravel5.2</a>
-                    </span>
-                    </p>
-                    <p><b>15</b> 个问题, <b>1</b> 人关注</p>
-                    </dd>
-                    </dl>
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/topic/队列"><img alt="" src="http://wenda.golaravel.com/static/common/topic-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <p class="clearfix">
-                    <span class="topic-tag">
-                    <a href="http://wenda.golaravel.com/topic/队列" class="text" data-id="273">队列</a>
-                    </span>
-                    </p>
-                    <p><b>10</b> 个问题, <b>1</b> 人关注</p>
-                    </dd>
-                    </dl>
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/topic/Homestead"><img alt="" src="http://wenda.golaravel.com/static/common/topic-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <p class="clearfix">
-                    <span class="topic-tag">
-                    <a href="http://wenda.golaravel.com/topic/Homestead" class="text" data-id="66">Homestead</a>
-                    </span>
-                    </p>
-                    <p><b>20</b> 个问题, <b>3</b> 人关注</p>
-                    </dd>
-                    </dl>
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/topic/数据库关联"><img alt="" src="http://wenda.golaravel.com/static/common/topic-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <p class="clearfix">
-                    <span class="topic-tag">
-                    <a href="http://wenda.golaravel.com/topic/数据库关联" class="text" data-id="360">数据库关联</a>
-                    </span>
-                    </p>
-                    <p><b>2</b> 个问题, <b>1</b> 人关注</p>
-                    </dd>
-                    </dl>
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/topic/并发"><img alt="" src="http://wenda.golaravel.com/static/common/topic-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <p class="clearfix">
-                    <span class="topic-tag">
-                    <a href="http://wenda.golaravel.com/topic/并发" class="text" data-id="1132">并发</a>
-                    </span>
-                    </p>
-                    <p><b>1</b> 个问题, <b>1</b> 人关注</p>
-                    </dd>
-                    </dl>
-                    </div>
-                    </div>
-                    <div class="aw-mod aw-text-align-justify">
-                    <div class="mod-head">
-                    <a href="http://wenda.golaravel.com/people/" class="pull-right">更多 &gt;</a>
-                    <h3>热门用户</h3>
-                    </div>
-                    <div class="mod-body">
+                    div.aw-mod
+                        div.mod-head
+                            h3(id="type")
+                                | 频道
+                        div.mod-body
+                            ul
+                                li
+                                    a(id="topic",href="/?topic=#{topic}")
+                                        | #{topic}
+                    div.aw-mod.aw-text-align-justify
+                        div.mod-head
+                            a.pull-right(href="/?topic=#{topic}")
+                                |更多 &gt;
+                            h3
+                                |热门文章
+                        div.mod-body(id="hotarticle")
 
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/people/%E8%B5%B7%E5%9B%A0%E5%B0%8F%E5%BC%BA"><img alt="" src="http://wenda.golaravel.com/uploads/avatar/000/00/03/05_avatar_mid.jpg"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <a href="http://wenda.golaravel.com/people/%E8%B5%B7%E5%9B%A0%E5%B0%8F%E5%BC%BA" data-id="305" class="aw-user-name">起因小强						</a>
-                    <p class="signature"></p>
-                    <p><b>4</b> 个问题, <b>1</b> 次赞同</p>
-                    </dd>
-                    </dl>
 
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/people/%E8%B5%B5%E7%8B%97%E8%83%9C"><img alt="" src="http://wenda.golaravel.com/uploads/avatar/000/00/08/86_avatar_mid.jpg"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <a href="http://wenda.golaravel.com/people/%E8%B5%B5%E7%8B%97%E8%83%9C" data-id="886" class="aw-user-name">赵狗胜						</a>
-                    <p class="signature"></p>
-                    <p><b>16</b> 个问题, <b>2</b> 次赞同</p>
-                    </dd>
-                    </dl>
-
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/people/bantes"><img alt="" src="http://wenda.golaravel.com/uploads/avatar/000/00/01/76_avatar_mid.jpg"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <a href="http://wenda.golaravel.com/people/bantes" data-id="176" class="aw-user-name">萧晔离<i class="icon-v" title="个人认证"></i>						</a>
-                    <p class="signature"></p>
-                    <p><b>20</b> 个问题, <b>14</b> 次赞同</p>
-                    </dd>
-                    </dl>
-
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/people/%E9%A3%8E"><img alt="" src="http://wenda.golaravel.com/uploads/avatar/000/00/34/28_avatar_mid.jpg"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <a href="http://wenda.golaravel.com/people/%E9%A3%8E" data-id="3428" class="aw-user-name">风						</a>
-                    <p class="signature"></p>
-                    <p><b>0</b> 个问题, <b>0</b> 次赞同#{data}</p>
-                    </dd>
-                    </dl>
-
-                    <dl>
-                    <dt class="pull-left aw-border-radius-5">
-                    <a href="http://wenda.golaravel.com/people/Hubery"><img alt="" src="http://wenda.golaravel.com/static/common/avatar-mid-img.png"></a>
-                    </dt>
-                    <dd class="pull-left">
-                    <a href="http://wenda.golaravel.com/people/Hubery" data-id="3732" class="aw-user-name">Hubery						</a>
-                    <p class="signature"></p>
-                    <p><b>0</b> 个问题, <b>0</b> 次赞同</p>
-                    </dd>
-                    </dl>
-                    </div>
-                    </div>				</div>
-                <!-- end 侧边栏 -->
+                    div.aw-mod.aw-text-align-justify
+                        div.mod-head
+                            a.pull-right(href="/")
+                                | 更多 &gt;
+                            h3(id="typeTitle")
+                                | 热门文章
+                        div.mod-body(id="hotype")

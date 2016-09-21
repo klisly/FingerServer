@@ -41,7 +41,7 @@ router.get('/',
         console.log("pageSize:" + pageSize + " page:" + page
             + " beforeAt:" + beforeAt + " afterAt:" + afterAt);
 
-        var conditions = {isBlock:false};
+        var conditions = {isBlock: false};
         var query = Site.find(conditions);
         if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
             query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -54,7 +54,7 @@ router.get('/',
         }
         query.skip((page - 1) * pageSize);
         query.limit(pageSize * 1);
-        query.sort({'followerCount':-1, "articleCount":-1})
+        query.sort({'followerCount': -1, "articleCount": -1})
             .exec(function (err, entities) {
                 if (err) {
                     return console.error(err);
@@ -137,22 +137,7 @@ router.post('/',
 router.param('id', function (req, res, next, id) {
     Site.findById(id, function (err, entity) {
         if (err || !entity) {
-            res.status(404)
-            var err = new Error('没有找到站点', id);
-            err.status = 404;
-            res.format({
-                //html: function(){
-                //  next(err);
-                //},
-                json: function () {
-                    res.json(
-                        {
-                            status: err.status,
-                            message: err
-                        }
-                    );
-                }
-            });
+            next();
             //if it is found we continue on
         } else {
             //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
@@ -166,24 +151,78 @@ router.param('id', function (req, res, next, id) {
     });
 });
 
-router.get('/:id', function (req, res) {
+router.get('/:id', function (req, res, next) {
+    if (req.site) {
+        res.format({
+            //html: function(){
+            //  res.render('blobs/show', {
+            //    "blobdob" : blobdob,
+            //    "blob" : blob
+            //  });
+            //},
+            json: function () {
+                res.json({
+                    status: 200,
+                    data: req.site
+                });
+            }
+        });
+    } else {
+        if (req.params.id == 'hot') {
+            next()
+        } else {
+            res.status(404)
+            res.format({
+                json: function () {
+                    res.json(
+                        {
+                            status: 404,
+                            message: "没有找到站点"
+                        }
+                    );
+                }
+            });
+        }
+    }
 
-    res.format({
-        //html: function(){
-        //  res.render('blobs/show', {
-        //    "blobdob" : blobdob,
-        //    "blob" : blob
-        //  });
-        //},
-        json: function () {
-            res.json({
-                status: 200,
-                data: req.site
+});
+
+
+/**
+ * 热门频道
+ *
+ */
+router.get('/hot', function (req, res) {
+    var pageSize = req.query.pageSize > 0 ? req.query.pageSize : 5;
+
+    var data = {};
+    var page = 1;
+    var query = Site.find(data);
+    query.skip((page - 1) * pageSize);
+    query.limit(pageSize * 1);
+    query.exec(function (err, entity) {
+        if (err) {
+            res.format({
+                json: function () {
+                    res.json({
+                        code: 500,
+                        msg: err.message
+                    });
+                }
+            });
+        } else {
+            res.format({
+                json: function () {
+                    res.status(200).json({
+                        "code": 200,
+                        "data": entity
+                    });
+                }
             });
         }
     });
-
 });
+
 
 router.put('/:id',
     validateToken,
@@ -398,7 +437,7 @@ router.post('/:id/subscribe',
                 if (entity.isBlock) {
                     data.isBlock = false;
                     entity.isBlock = false;
-                    data.seq = req.body.seq?req.body.seq:0;
+                    data.seq = req.body.seq ? req.body.seq : 0;
                     entity.seq = data.seq;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
@@ -454,7 +493,7 @@ router.post('/:id/subscribe',
                 data.siteId = site._id;
                 data.userAvatar = user.avatar;
                 data.siteName = site.name;
-                data.seq = req.param('seq')?req.param("seq"):0;
+                data.seq = req.param('seq') ? req.param("seq") : 0;
                 User2Site.create(data, function (err, entity) {
                     if (err) {
                         console.log(err);
@@ -525,7 +564,7 @@ router.put('/:id/subscribe',
 
             if (entity) {
                 if (!entity.isBlock) {
-                    data.seq = req.body.seq?req.body.seq:0;
+                    data.seq = req.body.seq ? req.body.seq : 0;
                     entity.seq = data.seq;
                     data.userAvatar = user.avatar;
                     entity.updateAt = new Date().getTime();
@@ -589,7 +628,7 @@ router.post('/:id/unsubscribe',
                 if (!entity.isBlock) {
                     data.isBlock = true;
                     entity.isBlock = true;
-                    
+
                     entity.update(data, function (err, resData) {
                         if (err) {
                             res.status(500).json(

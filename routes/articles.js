@@ -93,13 +93,60 @@ router.get('/', function (req, res) {
             res.format({
                 json: function () {
                     res.json({
-                        status: 500,
+                        code: 500,
                         msg: err.message
                     });
                 }
             });
         } else {
             console.log("query result: size:" + entity.length)
+            res.format({
+                json: function () {
+                    res.status(200).json({
+                        "code": 200,
+                        "data": entity
+                    });
+                }
+            });
+        }
+    });
+});
+
+/**
+ * 热门文章
+ *
+ */
+router.get('/hot', function (req, res) {
+    var pageSize = req.query.pageSize > 0 ? req.query.pageSize : 5;
+    var topic = req.query.topic;
+    var siteId = req.query.siteId;
+    var data = {};
+    if (siteId) {
+        data.siteId = validator.trim(siteId);
+    }
+    if (topic) {
+        data.topics = validator.trim(topic);
+    }
+    var page = 1;
+    console.log("page:" + page)
+    var query = Article.find(data);
+    query.skip((page - 1) * pageSize);
+    query.limit(pageSize * 1);
+    query.sort({'heartCount': -1})
+    var sels = 'title publishAt author authorId site siteId srcUrl ' +
+        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
+    query.select(sels)
+    query.exec(function (err, entity) {
+        if (err) {
+            res.format({
+                json: function () {
+                    res.json({
+                        code: 500,
+                        msg: err.message
+                    });
+                }
+            });
+        } else {
             res.format({
                 json: function () {
                     res.status(200).json({
@@ -256,7 +303,8 @@ router.get('/:id', function (req, res, next) {
         })
     });
     var data = {
-        'article': req.article
+        'article': req.article,
+        "topic": common.getTopic(req.article.topics),
     }
     ep.on("success", function () {
         res.format({
@@ -299,7 +347,6 @@ router.get('/:id', function (req, res, next) {
         });
 
     }
-
 });
 
 /**

@@ -50,7 +50,7 @@ router.get('/', function (req, res, next) {
     data.page = page;
     data.totalPage = count;
     data.siteId = req.query.siteId
-    data.topic = req.query.topic
+    data.topic = topic
     query.select(sels)
     query.exec(function (err, entity) {
         if (err) {

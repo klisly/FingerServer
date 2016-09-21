@@ -39,7 +39,7 @@ router.get('/',
         var page = req.param('page') > 0 ? req.param('page') : DEFAULT_PAGE;
         var beforeAt = req.param('beforeAt');
         var afterAt = req.param('afterAt');
-        var conditions = {isBlock:false};
+        var conditions = {isBlock: false};
         var query = Topic.find(conditions);
         if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
             query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -52,33 +52,33 @@ router.get('/',
         }
         query.skip((page - 1) * pageSize);
         query.limit(pageSize * 1);
-        query.sort({'followerCount':-1, "articleCount":-1});
+        query.sort({'followerCount': -1, "articleCount": -1});
         query.exec(function (err, entities) {
-                if (err) {
-                    res.status(400).json({
-                        status: 40001,
-                        msg: err.message,
-                    })
-                } else {
-                    ////respond to both HTML and JSON. JSON responses require 'Accept: application/json;' in the Request Header
-                    res.format({
-                        //  //HTML response will render the index.jade file in the views/blobs folder. We are also setting "blobs" to be an accessible variable in our jade view
-                        //  html: function(){
-                        //    res.render('blobs/index', {
-                        //      title: 'All my Blobs',
-                        //      "blobs" : blobs
-                        //    });
-                        //  },
-                        //JSON response will show all blobs in JSON format
-                        json: function () {
-                            res.status(200).json({
-                                status: 200,
-                                data: entities
-                            });
-                        }
-                    });
-                }
-            });
+            if (err) {
+                res.status(400).json({
+                    status: 40001,
+                    msg: err.message,
+                })
+            } else {
+                ////respond to both HTML and JSON. JSON responses require 'Accept: application/json;' in the Request Header
+                res.format({
+                    //  //HTML response will render the index.jade file in the views/blobs folder. We are also setting "blobs" to be an accessible variable in our jade view
+                    //  html: function(){
+                    //    res.render('blobs/index', {
+                    //      title: 'All my Blobs',
+                    //      "blobs" : blobs
+                    //    });
+                    //  },
+                    //JSON response will show all blobs in JSON format
+                    json: function () {
+                        res.status(200).json({
+                            status: 200,
+                            data: entities
+                        });
+                    }
+                });
+            }
+        });
     });
 
 router.post('/',
@@ -137,22 +137,23 @@ router.post('/',
 router.param('id', function (req, res, next, id) {
     Topic.findById(id, function (err, entity) {
         if (err || !entity) {
-            res.status(404)
-            var err = new Error('没有找到主题', id);
-            err.status = 404;
-            res.format({
-                //html: function(){
-                //  next(err);
-                //},
-                json: function () {
-                    res.json(
-                        {
-                            status: err.status,
-                            message: err
-                        }
-                    );
-                }
-            });
+            // res.status(404)
+            // var err = new Error('没有找到主题', id);
+            // err.status = 404;
+            // res.format({
+            //     //html: function(){
+            //     //  next(err);
+            //     //},
+            //     json: function () {
+            //         res.json(
+            //             {
+            //                 status: err.status,
+            //                 message: err
+            //             }
+            //         );
+            //     }
+            // });
+            next()
             //if it is found we continue on
         } else {
             //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
@@ -166,24 +167,77 @@ router.param('id', function (req, res, next, id) {
     });
 });
 
-router.get('/:id', function (req, res) {
+router.get('/:id', function (req, res, next) {
+    if (req.article) {
+        res.format({
+            //html: function(){
+            //  res.render('blobs/show', {
+            //    "blobdob" : blobdob,
+            //    "blob" : blob
+            //  });
+            //},
+            json: function () {
+                res.json({
+                    status: 200,
+                    data: req.topic
+                });
+            }
+        });
+    } else {
+        if (req.params.id == 'hot') {
+            next()
+        } else {
+            res.status(404)
+            res.format({
+                json: function () {
+                    res.json(
+                        {
+                            status: 404,
+                            message: "没有找到主题"
+                        }
+                    );
+                }
+            });
+        }
+    }
+});
 
-    res.format({
-        //html: function(){
-        //  res.render('blobs/show', {
-        //    "blobdob" : blobdob,
-        //    "blob" : blob
-        //  });
-        //},
-        json: function () {
-            res.json({
-                status: 200,
-                data: req.topic
+/**
+ * 热门频道
+ *
+ */
+router.get('/hot', function (req, res) {
+    var pageSize = req.query.pageSize > 0 ? req.query.pageSize : 5;
+
+    var data = {};
+    data["name"] = {"$nin": ["热门", "推荐"]}
+    var page = 1;
+    var query = Topic.find(data);
+    query.skip((page - 1) * pageSize);
+    query.limit(pageSize * 1);
+    query.exec(function (err, entity) {
+        if (err) {
+            res.format({
+                json: function () {
+                    res.json({
+                        code: 500,
+                        msg: err.message
+                    });
+                }
+            });
+        } else {
+            res.format({
+                json: function () {
+                    res.status(200).json({
+                        "code": 200,
+                        "data": entity
+                    });
+                }
             });
         }
     });
-
 });
+
 
 router.put('/:id',
     validateToken,
@@ -224,7 +278,7 @@ router.put('/:id',
         if (req.body.followerCount) {
             entity.followerCount = data.followerCount;
         }
-        
+
         entity.updateAt = new Date().getTime();
         data.updateAt = entity.updateAt;
         entity.update(data, function (err, blobID) {
@@ -275,7 +329,7 @@ router.get('/:id/articles', function (req, res) {
     var afterAt = req.query.afterAt;
     console.log("pageSize:" + pageSize + " page:" + page + " beforeAt:" + beforeAt + " afterAt:" + afterAt);
 
-    var conditions = {topics:[req.topic.name]};
+    var conditions = {topics: [req.topic.name]};
     var query = Article.find(conditions);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -399,7 +453,7 @@ router.post('/:id/subscribe',
                 if (entity.isBlock) {
                     data.isBlock = false;
                     entity.isBlock = false;
-                    data.seq = req.body.seq?req.body.seq:0;
+                    data.seq = req.body.seq ? req.body.seq : 0;
                     entity.seq = data.seq;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
@@ -455,7 +509,7 @@ router.post('/:id/subscribe',
                 data.userAvatar = user.avatar;
                 data.topicId = topic._id;
                 data.topicName = topic.name;
-                data.seq = req.param('seq')?req.param("seq"):0;
+                data.seq = req.param('seq') ? req.param("seq") : 0;
                 User2Topic.create(data, function (err, entity) {
                     if (err) {
                         res.status(500).json(
@@ -525,7 +579,7 @@ router.put('/:id/subscribe',
 
             if (entity) {
                 if (!entity.isBlock) {
-                    data.seq = req.body.seq?req.body.seq:0;
+                    data.seq = req.body.seq ? req.body.seq : 0;
                     entity.seq = data.seq;
                     entity.updateAt = new Date().getTime();
                     entity.update(data, function (err, resData) {
@@ -611,8 +665,10 @@ router.post('/:id/unsubscribe',
                                     });
                                 }
                             });
-                            topic.update({followerCount: topic.followerCount - 1}, function (err, data) {});
-                            user.update({followingTopic: user.followingTopic - 1}, function (err, data) {});
+                            topic.update({followerCount: topic.followerCount - 1}, function (err, data) {
+                            });
+                            user.update({followingTopic: user.followingTopic - 1}, function (err, data) {
+                            });
                         }
                     })
                 } else {
