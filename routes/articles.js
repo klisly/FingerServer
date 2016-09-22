@@ -1,6 +1,8 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var Article = mongoose.model('Article');
+var Topic = mongoose.model('Topic');
+var Site = mongoose.model('Site');
 var User = mongoose.model('User');
 var randomInt = require('random-integral');
 var User2Article = mongoose.model('User2Article')
@@ -243,6 +245,8 @@ router.post('/', function (req, res, next) {
                 return;
             }
         } else {
+            Site.update({"_id": data.siteId}, {"$inc": {"articleCount": 1}}).exec();
+            Topic.update({"name": common.getTopic(data.topics)}, {"$inc": {"articleCount": 1}}).exec();
             res.format({
                 //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
                 //html: function(){
