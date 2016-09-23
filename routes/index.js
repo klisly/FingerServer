@@ -51,14 +51,23 @@ router.get('/', function (req, res, next) {
     data.totalPage = count;
     data.siteId = req.query.siteId
     data.topic = topic
+    var location = "topic";
+    if(data.siteId){
+        location = "site";
+    }
     query.select(sels)
     query.exec(function (err, entity) {
         if (err) {
             next(err)
         } else {
-            res.render('index', {location:"topic", opts:data, articles:entity});
+            res.render('index', {location:location, opts:data, articles:entity});
         }
     });
+});
+
+
+router.get('/login', function (req, res, next) {
+    res.render('login', {});
 });
 
 module.exports = router;

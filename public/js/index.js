@@ -28,7 +28,7 @@ $(function () {
 function getHostSites() {
     $.ajax({
             type: "get",
-            url: "/sites/hot",
+            url: "/topics/hot",
             success: function (data) {
                 if (data.code == '200') {
                     var html = ""
@@ -38,7 +38,7 @@ function getHostSites() {
                             + ' <dd class="pull-left">'
                             + '  <p class="clearfix">'
                             + '   <span class="topic-tag">'
-                            + '    <a href="/?site='+entity.name+'" class="aw-user-name" data-id="'+entity.name+'">'+entity.name+'</a>'
+                            + '    <a href="/?topic='+entity.name+'" class="aw-user-name" data-id="'+entity.name+'">'+entity.name+'</a>'
                             + '   </span>'
                             + '  </p>'
                             + ' <p><b>'+entity.articleCount+'</b> 篇文章 • <b>'+entity.followerCount+'</b> 人订阅 </p>'

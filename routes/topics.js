@@ -213,7 +213,7 @@ router.get('/hot', function (req, res) {
     data["name"] = {"$nin": ["热门", "推荐"]}
     var query = Topic.find(data);
     query.limit(pageSize * 1);
-    query.sort({'heartCount': -1})
+    query.sort({'articleCount': -1})
     query.exec(function (err, entity) {
         if (err) {
             res.format({
