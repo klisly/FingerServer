@@ -84,7 +84,7 @@ router.get('/', function (req, res) {
     }
     var sels = 'title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
-    if(data.topics == "段子"){
+    if(data.topics == "段子" ){
         sels = sels+" content "
     }
     query.select(sels)

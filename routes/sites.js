@@ -200,6 +200,7 @@ router.get('/hot', function (req, res) {
     var query = Site.find(data);
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
+    query.sort({'heartCount': -1})
     query.exec(function (err, entity) {
         if (err) {
             res.format({
