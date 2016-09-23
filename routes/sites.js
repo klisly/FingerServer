@@ -246,6 +246,11 @@ router.put('/:id',
             data.srcUrl = validator.trim(req.body.srcUrl);
         }
 
+        if (req.body.type) {
+            data.type = validator.trim(req.body.type);
+        }
+
+
         if (req.body.followerCount) {
             data.followerCount = validator.trim(req.body.followerCount);
         }
@@ -287,7 +292,6 @@ router.put('/:id',
                     json: function () {
                         res.json({
                             status: 200,
-                            data: entity
                         });
                     }
                 });

@@ -13,7 +13,7 @@ block content
                         h1
                             | #{article.title}
                         span.timestamp
-                            | 时间:&nbsp;#{moment(article.createAt).utc().utcOffset(-8).format("MM-DD HH:mm")}&nbsp;&nbsp;&nbsp;&nbsp;来源:&nbsp;#{article.site}
+                            | 时间:&nbsp;#{moment(article.createAt).utc().utcOffset(+8).format("MM-DD HH:mm")}&nbsp;&nbsp;&nbsp;&nbsp;来源:&nbsp;#{article.site}
                     div(id="content")
                         |!{article.content}
                     div.aw-footer

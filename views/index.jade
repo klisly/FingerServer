@@ -95,7 +95,7 @@ block content
                                                     | #{article.title}
                                             p
                                                 span.text-color-999
-                                                    | #{article.site} • #{article.readCount} 次浏览 • #{moment(article.createAt).utc().utcOffset(-8).format('MM-DD HH:MM')}
+                                                    | #{article.site} • #{article.readCount} 次浏览 • #{article.collectCount} 人收藏
                             div.mod-footer
                                 div.page-control
                                     ul.pagination.pull-right
