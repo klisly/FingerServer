@@ -34,7 +34,6 @@ var pageNum = undefined;
  *
  */
 router.get('/', function (req, res) {
-    // todo newest
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;
@@ -62,6 +61,9 @@ router.get('/', function (req, res) {
         page = common.getRandomNum(1, count > 2000 ? 2000 : count); // 最大2000页
     }
     console.log("page:" + page)
+    if(data.topics != "段子" ){
+        data.topics = {"$ne":"段子"}
+    }
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -84,9 +86,6 @@ router.get('/', function (req, res) {
     }
     var sels = 'title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
-    if(data.topics == "段子" ){
-        sels = sels+" content "
-    }
     query.select(sels)
     console.log("start query");
     query.exec(function (err, entity) {

@@ -1,1 +1,1 @@
-DEBUG=second-server:* supervisor --debug bin/www
+DEBUG=second-server:* nodemon bin/www

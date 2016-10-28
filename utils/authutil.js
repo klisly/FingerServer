@@ -3,9 +3,7 @@ var jwtTokenSecret = "see you all the time";
 var userProxy = require('../proxy/user')
 var url = require('url')
 var redisClient = require('../model/second_redis').redisClient;
-/**
- * 此处使用redis存储注销后的token
- */
+
 /**
  * 生成token
  * @param userid
@@ -51,7 +49,7 @@ exports.validateToken = function (req, res, next) {
                 .json(
                     {
                         msg: "token invalid",
-                        status: 40102
+                        status: 401
                     }
                 )
                 .end();
@@ -60,19 +58,17 @@ exports.validateToken = function (req, res, next) {
             if (token) {
                 try {
                     var decoded = jwt.decode(token, jwtTokenSecret);
-                    // console.log("token decod data:" + decoded.iss + " expires:" + decoded.exp);
                     if (decoded.exp <= Date.now()) {
                         res.status(401)
                             .json(
                                 {
                                     msg: 'Access token has expired',
-                                    status: 40103
+                                    status: 401
                                 })
                             .end();
                         return;
                     }
                     userProxy.getUsersById(decoded.iss, function (err, entity) {
-                        // console.log("find user from db:" + entity);
                         if (!err) {
                             req.user = entity;
                             return next();

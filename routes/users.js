@@ -25,7 +25,6 @@ var MAX_READED_ARTICLE = 30;
 var suphone = "18301441595"
 // 公用校验方法
 var validateToken = require("../utils/authutil").validateToken;
-
 var requireAuth = require("../utils/authutil").requireAuth;
 //Any requests to this controller must pass through this 'use' function
 //Copy and pasted from method-override

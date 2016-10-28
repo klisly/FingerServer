@@ -4,8 +4,9 @@ var mongoose = require('mongoose');
 var validator = require('validator');
 var eventproxy = require('eventproxy');
 var Article = mongoose.model('Article');
+var Magzine = mongoose.model('Magzine');
 var common = new require("../utils/commonutils");
-
+var moment = require("moment");
 var DEFAULT_PAGE_SIZE = 20;
 var DEFAULT_PAGE = 1;
 /* GET home page. */
@@ -69,5 +70,68 @@ router.get('/', function (req, res, next) {
 router.get('/login', function (req, res, next) {
     res.render('login', {});
 });
+
+var RECOM_SIZE = 100;
+var MAG_SIZE = 10;
+
+router.get('/maggen', function (req, res, next) {
+    var now = new Date();
+    var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
+    console.log("time:"+ d);
+    var data = {};
+    data.topics = {"$ne":"段子"}
+    // data.updateAt = {"$gt":(now.getTime() -  43200000)}
+    var query = Article.find(data);
+    query.sort({'heartCount': -1})
+    var sels = 'title publishAt author authorId site siteId srcUrl ' +
+        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
+    if(data.topics == "段子" ){
+        sels = sels+" content "
+    }
+    query.select(sels);
+    query.limit(RECOM_SIZE);
+    console.log("start query");
+    query.exec(function (err, entity) {
+        if (err) {
+            console.log("query result: err:" + JSON.stringify(err));
+        } else {
+            if(entity.length < MAG_SIZE){
+                return;
+            }
+            var data = {}
+            var articles = [];
+            var start = common.getRandomNum(0, RECOM_SIZE-MAG_SIZE-1);
+            for(var index = 0; index < MAG_SIZE; index++){
+                articles.push(entity[start+index])
+            }
+            var hour = now.getHours();
+            data.no = d + (hour < 12 ? '早报':'晚报');
+            data.articles = articles;
+            data.createAt = new Date().getTime();
+            data.updateAt = new Date().getTime();
+            console.log("data:"+JSON.stringify(data))
+            Magzine.create(data, function (err, entity) {
+                if (err) {
+                    if (err.code == 11000) {
+                       console.log('已经存在');
+                        return;
+                    }
+                } else {
+                    console.log('生成成功');
+                }
+            })
+        }
+    });
+    res.format({
+        json: function () {
+            res.json({
+                status: 200,
+            });
+        }
+    });
+
+});
+
+
 
 module.exports = router;

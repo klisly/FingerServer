@@ -14,11 +14,15 @@ var secondDB = require("./model/second_db");
 var splash = require("./model/splash");
 var topic = require("./model/topic");
 var site = require("./model/site");
+var magzine = require("./model/magzine")
 var user2topic = require("./model/user2topic");
 var article = require("./model/article");
 var author = require("./model/user");
 var user2site = require("./model/user2site");
 var user2article = require("./model/user2article");
+var version = require("./model/version");
+var magazintask = require('./cron/magzine');
+
 var app = express();
 
 // view engine setup
@@ -50,6 +54,7 @@ var apiSites = require("./routes/sites");
 
 var apiArticles = require("./routes/articles");
 var apiUsers = require("./routes/users");
+var apiVersions = require("./routes/versions");
 
 app.use('/', indexs);
 app.use("/splashes", apiSplashes);
@@ -57,6 +62,14 @@ app.use("/topics", apiTopics);
 app.use("/sites", apiSites);
 app.use("/articles", apiArticles);
 app.use("/users", apiUsers);
+app.use("/versions", apiVersions);
+
+app.use("/v1/splashes", require('./routes/v1/splashes'));
+app.use("/v1/topics", require('./routes/v1/topics'));
+app.use("/v1/sites", require('./routes/v1/sites'));
+app.use("/v1/articles", require('./routes/v1/articles'));
+app.use("/v1/users", require('./routes/v1/users'));
+app.use("/v1/versions", require('./routes/v1/versions'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -89,5 +102,5 @@ app.use(function (err, req, res, next) {
     });
 });
 
-
+magazintask();
 module.exports = app;
