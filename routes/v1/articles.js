@@ -29,13 +29,11 @@ router.use(methodOverride(function (req, res) {
         return method
     }
 }))
-var pageNum = undefined;
 /**
  * 支持分页查询
  *
  */
 router.get('/', function (req, res) {
-    // todo newest
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;
@@ -51,18 +49,17 @@ router.get('/', function (req, res) {
         console.log("siteId:" + data.siteId);
     }
     if (req.query.topics) {
-        data.topics = validator.trim(req.query.topics);
-        console.log("topics:" + data.topics);
+        var cons = {};
+        var topic = validator.trim(req.query.topics);
+        console.log("topics:" + data.topic);
+        cons["$in"] = [topic];
+        data.topics = cons;
     }
-    Article.count({}, function (err, data) {
-        console.log("num:" + data);
-        pageNum = data
-    })
-    var count = (pageNum == undefined ? 100 : pageNum) / pageSize;
-    if (type != undefined) {
-        page = common.getRandomNum(1, count > 2000 ? 2000 : count); // 最大2000页
+    if (type == "hot" || type == "recommend") {
+        var cons = {};
+        cons["$nin"] = ["段子"]
+        data.topics = cons;
     }
-    console.log("page:" + page)
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("updateAt").gt(afterAt).lt(beforeAt);
@@ -78,18 +75,16 @@ router.get('/', function (req, res) {
     query.limit(pageSize * 1);
     if (type == "hot") {
         query.sort({'heartCount': -1})
-    } else if (type == "recomend") {
-        query.sort({'collectCount': -1})
     } else {
         query.sort({'updateAt': -1})
     }
     var sels = 'title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
-    if (data.topics == "段子") {
+    if (req.query.topics == "段子") {
         sels = sels + " content "
     }
     query.select(sels)
-    console.log("start query");
+    console.log("start query, data:" + JSON.stringify(data));
     query.exec(function (err, entity) {
         if (err) {
             console.log("query result: err:" + JSON.stringify(err));
@@ -458,7 +453,7 @@ router.put('/:id', function (req, res, next) {
     if (req.body.readCount) {
         data.readCount = validator.trim(req.body.readCount);
     }
-    
+
     if (req.body.commentCount) {
         data.commentCount = validator.trim(req.body.commentCount);
     }
