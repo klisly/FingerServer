@@ -9,8 +9,7 @@ var methodOverride = require('method-override'); //used to manipulate POST
 var Novel = mongoose.model('Novel');
 var User2Novel = mongoose.model('User2Novel');
 var Chapter = mongoose.model('Chapter');
-var request = require("request");
-
+var httputil = require("../../utils/crawlutil")
 var DEFAULT_PAGE_SIZE = 20; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
 var router = express.Router();
@@ -29,50 +28,6 @@ router.use(methodOverride(function (req, res) {
     }
 }))
 
-function search(name, callback) {
-
-    var options = {
-        method: 'GET',
-        url: 'http://zhannei.baidu.com/cse/search',
-        qs: {
-            click: '1',
-            entry: '1',
-            s: '14041278195252845489',
-            nsid: '',
-            srt: 'dateModified',
-            q: encodeURIComponent(name)
-        },
-        headers: {
-            'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
-            'cache-control': 'no-cache',
-            "gzip": "true"
-        }
-    };
-    var count = 0;
-
-    function requestData() {
-        count++;
-        console.log("requestData " + count)
-        request(options, function (error, response, body) {
-            if (error) {
-                if (count > 4) {
-                    callback(error, null);
-                }
-            } else {
-                clearInterval(interval);
-                callback(null, body);
-            }
-        });
-    }
-
-    var period = 6000; // 10 second
-    requestData();
-    var interval = setInterval(function () {
-        console.log("execut get date interval")
-        requestData()
-    }, period);
-}
-
 /**
  * 查找所想订阅的书籍
  */
@@ -80,7 +35,7 @@ router.get('/search',
     function (req, res, next) {
         if (req.query.name) {
             console.log("start search " + req.query.name);
-            search(req.query.name, function (err, body) {
+            httputil.search(req.query.name, function (err, body) {
                 if (err) {
                     res.json({
                         code: 404,
@@ -92,7 +47,7 @@ router.get('/search',
                     $('#results > div.result-list > div.result-item').each(function (idx, element) {
                         // div.result-game-item-detail > h3 > a
                         var data = {}
-                        data.image = $(this).find('.result-game-item-pic').find('a').attr('href');
+                        data.image = $(this).find('.result-game-item-pic').find('a').find('img').attr('src');
                         data.title = $(this).find('.result-game-item-detail').find('h3').find('a').text().trim();
                         data.href = $(this).find('.result-game-item-detail').find('h3').find('a').attr('href');
                         data.desc = $(this).find('.result-game-item-detail').find('.result-game-item-desc').text().trim();
@@ -180,6 +135,10 @@ router.post('/subscribe',
 
         if (req.body.latest) {
             data.latest = validator.trim(req.body.latest);
+        }
+
+        if (req.body.updateAt) {
+            data.updateAt = validator.trim(req.body.updateAt);
         }
         let newCreate = false;
         Novel
@@ -278,17 +237,16 @@ router.post('/:id/unsubscribe',
 router.get('/:id/chapters', function (req, res) {
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
-    var conditions = {topics: [req.topic.name]};
-    var query = Article.find(conditions);
+    var conditions = {"nid": req.params.id};
+    var query = Chapter.find(conditions);
     query.where("updateAt").lt(new Date().getTime());
-    query.select('title publishAt author authorId site siteId srcUrl ' +
-        'topics age likeNum commentNum readNum createAt updateAt checked reason isBlock')
+    query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);                                                
-    query.sort('-updateAt desc');
+    query.sort('-no desc');
     query.exec(function (err, entity) {
         if (err) {
-            return next();
+            return next(err);
         } else {
             res.format({
                 json: function () {
@@ -301,5 +259,29 @@ router.get('/:id/chapters', function (req, res) {
         }
     });
 });
+
+/**
+ * 支持分页查询
+ */
+router.get('/crawl', function (req, res) {
+    console.log("start crawl chapters")
+    var date = new Date();
+    
+    Novel
+        .find({'lastCheck': {$lt:date.getTime() - 3600000}})
+        .exec()
+        .then((datas)=> {
+            console.log("need crawl novel size:"+datas.length)
+            for(var index = 0; index < datas.length; index++){
+                console.log("index:"+index);
+                crawl(datas[index]);
+            }
+        })
+    res.send();
+});
+
+function crawl(novel) {
+    httputil.crawUpdates(novel);
+}
 
 module.exports = router;

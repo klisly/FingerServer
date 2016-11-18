@@ -22,7 +22,6 @@ var author = require("./model/user");
 var user2site = require("./model/user2site");
 var user2article = require("./model/user2article");
 var version = require("./model/version");
-var magazintask = require('./cron/magzine');
 require("./model/Novel")
 require("./model/Chapter")
 require("./model/user2novel");
@@ -107,5 +106,6 @@ app.use(function (err, req, res, next) {
     });
 });
 
-magazintask();
+require('./cron/magzine')()
+require('./cron/crawlchapters')();
 module.exports = app;
