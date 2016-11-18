@@ -70,18 +70,15 @@ function crawUpdates(novel, callback) {
             var count = 0;
             var maxCount = 10;
             var stop = false;
-            novel.lastCheck = 0;
             if (novel.lastCheck == 0) { // 首次抓取
                 maxCount = 10;
                 novel
             }
             var newest = datas[datas.length - 1];
+            Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
+            User2Novel.update({"novelId":novel._id.toString()},{"lastUpdate":new Date().getTime()}).exec()
 
             datas.reverse().forEach(function (data) {
-                if(count == datas.length - 1){
-                    Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
-                    User2Novel.update({"novelId":novel._id.toString()},{"lastUpdate":new Date().getTime()}).exec()
-                }
                 if (stop) {
                     return;
                 }

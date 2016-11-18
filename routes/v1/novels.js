@@ -67,7 +67,6 @@ router.get('/search',
                                 } else if (count == 7) {
                                     data.latest = text;
                                 }
-                                console.log(text + ":" + count++);
                             })
                         $(this).find('.result-game-item-detail')
                             .find('.result-game-item-info')
