@@ -15,6 +15,7 @@ var splash = require("./model/splash");
 var topic = require("./model/topic");
 var site = require("./model/site");
 var magzine = require("./model/magzine")
+
 var user2topic = require("./model/user2topic");
 var article = require("./model/article");
 var author = require("./model/user");
@@ -22,6 +23,9 @@ var user2site = require("./model/user2site");
 var user2article = require("./model/user2article");
 var version = require("./model/version");
 var magazintask = require('./cron/magzine');
+require("./model/Novel")
+require("./model/Chapter")
+require("./model/user2novel");
 
 var app = express();
 
@@ -69,6 +73,7 @@ app.use("/v1/topics", require('./routes/v1/topics'));
 app.use("/v1/sites", require('./routes/v1/sites'));
 app.use("/v1/articles", require('./routes/v1/articles'));
 app.use("/v1/users", require('./routes/v1/users'));
+app.use("/v1/novels", require('./routes/v1/novels'));
 app.use("/v1/versions", require('./routes/v1/versions'));
 
 // catch 404 and forward to error handler

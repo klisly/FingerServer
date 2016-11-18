@@ -75,10 +75,17 @@ exports.validateToken = function (req, res, next) {
                         }
                     })
                 } catch (err) {
-                    return next();
+                    return next(err);
                 }
             } else {
-                next();
+                res.status(401)
+                    .json(
+                        {
+                            msg: 'Access token not exist',
+                            status: 401
+                        })
+                    .end();
+                return;
             }
         }
     });

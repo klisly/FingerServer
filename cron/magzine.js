@@ -21,5 +21,4 @@ module.exports = function () {
         });
     }, null, false, 'America/Los_Angeles');
     task.start();
-
 }
