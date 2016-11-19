@@ -16,7 +16,7 @@ var router = express.Router();
 var validateToken = require("../../utils/authutil").validateToken;
 var requireAuth = require("../../utils/authutil").requireAuth;
 var validateRole = require("../../utils/authutil").validateRole;
-let cheerio = require('cheerio')
+var cheerio = require('cheerio')
 
 router.use(bodyParser.urlencoded({extended: true}))
 router.use(methodOverride(function (req, res) {
@@ -42,7 +42,7 @@ router.get('/search',
                         msg: "没有找到相关的小说"
                     })
                 } else {
-                    let $ = cheerio.load(body);
+                    var $ = cheerio.load(body);
                     var datas = []
                     $('#results > div.result-list > div.result-item').each(function (idx, element) {
                         // div.result-game-item-detail > h3 > a
@@ -57,7 +57,7 @@ router.get('/search',
                             .find('.result-game-item-info-tag')
                             .find("span")
                             .each(function (iidx, eelement) {
-                                let text = $(this).text().trim();
+                                var text = $(this).text().trim();
                                 if (count == 1) {
                                     data.author = text;
                                 } else if (count == 3) {
@@ -73,7 +73,7 @@ router.get('/search',
                             .find('.result-game-item-info-tag')
                             .find("a")
                             .each(function (iidx, eelement) {
-                                let text = $(this).text().trim();
+                                var text = $(this).text().trim();
                                 data.latest = text;
                             })
                         datas.push(data)
@@ -139,7 +139,7 @@ router.post('/subscribe',
         if (req.body.updateAt) {
             data.updateAt = validator.trim(req.body.updateAt);
         }
-        let newCreate = false;
+        var newCreate = false;
         Novel
             .find({'title': data.title, "author": data.author})
             .exec()

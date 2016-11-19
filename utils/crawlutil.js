@@ -1,6 +1,6 @@
 var request = require("request");
 var mongoose = require('mongoose');
-let cheerio = require('cheerio')
+var cheerio = require('cheerio')
 var Chapter = mongoose.model('Chapter');
 var Novel = mongoose.model('Novel');
 var User2Novel = mongoose.model('User2Novel');
@@ -53,7 +53,7 @@ function crawUpdates(novel, callback) {
     crawlPage(novel.href, function (err, body) {
         try {
             console.log("home done");
-            let $ = cheerio.load(body);
+            var $ = cheerio.load(body);
             var datas = []
             //*[@id="list"]/dl/dd[89]#list > dl > dd:nth-child(6)
             $('#list > dl > dd > a').each(function (idx, element) {
@@ -98,7 +98,7 @@ function crawUpdates(novel, callback) {
                 console.log("crawl "+data.href);
                 crawlPage(data.href, function (err, body) {
                     try {
-                        let $ = cheerio.load(body);
+                        var $ = cheerio.load(body);
                         var chapter = {}
                         chapter.content = $('#content').html();
                         chapter.no = data.no;
