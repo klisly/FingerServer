@@ -72,7 +72,6 @@ function crawUpdates(novel, callback) {
             var stop = false;
             if (novel.lastCheck == 0) { // 首次抓取
                 maxCount = 10;
-                novel
             }
             var newest = datas[datas.length - 1];
             Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
