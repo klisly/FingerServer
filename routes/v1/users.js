@@ -7,6 +7,7 @@ var User2Topic = mongoose.model('User2Topic');
 var User2Site = mongoose.model('User2Site');
 var User2Article = mongoose.model('User2Article')
 var User2Novel = mongoose.model('User2Novel')
+var Chapter = mongoose.model('Chapter');
 
 var eventproxy = require('eventproxy');
 var userProxy = require("../../proxy/user");
@@ -1021,15 +1022,16 @@ router.get('/:uid/novels', function (req, res) {
         });
 });
 
-
 /**
  * 获取用户尚未读的更新章节
  */
-router.get('/:uid/chapters', function (req, res) {
+router.get('/:uid/chapters', validateToken, function (req, res) {
     var conditions = {};
-    conditions.uid = req.params.uid;
-    User2Novel.find(conditions)
-        .sort({'lastUpdate': -1})
+    conditions.nid = {$in:req.user.novels}
+    conditions.updateAt = {$gt:new Date().getTime() - 86400000}
+    Chapter.find(conditions)
+        .sort({'lastUpdate': -1, "nname":-1})
+        .select('no title href nid nname author updateAt createAt')
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(

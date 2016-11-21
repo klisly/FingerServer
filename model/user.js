@@ -18,6 +18,7 @@ var objectSchema = new Schema({
     shareCount:{ type:Number,default:0, index: true},
     toReadCount:{ type:Number,default:0, index: true},
     likeCount:{ type:Number,default:0},
+    novels:{type:Array},
     replyCount: { type: Number, default: 0 },
     followerCount: { type: Number, default: 0 },
     followingSite: { type: Number, default: 0 },

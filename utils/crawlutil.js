@@ -5,7 +5,10 @@ var Chapter = mongoose.model('Chapter');
 var Novel = mongoose.model('Novel');
 var User2Novel = mongoose.model('User2Novel');
 var _ = require("lodash")
+var maxtry = 3;
 function search(name, callback) {
+    var url = 'http://zhannei.baidu.com/cse/search?s='+name;
+    var count ={}
     var options = {
         method: 'GET',
         url: 'http://zhannei.baidu.com/cse/search',
@@ -22,37 +25,34 @@ function search(name, callback) {
             "gzip": "true"
         }
     };
-    var count = 0;
 
+    count["count_"+url]=0;
     function requestData() {
-        count++;
-        console.log("requestData " + count)
+        console.log("url:"+url+" Count:"+JSON.stringify(count))
+        count["count_"+url]=count["count_"+url]+1;
+        if(parseInt(count["count_"+url]) > maxtry){
+            return;
+        }
+        console.log("requestData " + count["count_"+url]+ " url:"+url)
         request(options, function (error, response, body) {
             if (error) {
-                if (count > 4) {
-                    callback(error, null);
-                }
+                console.log("crawl err:"+url);
+                requestData();
             } else {
-                clearInterval(interval);
                 callback(null, body);
             }
         });
     }
-
-    var period = 6000; // 10 second
     requestData();
-    var interval = setInterval(function () {
-        console.log("execut get date interval")
-        requestData()
-    }, period);
 }
 
 
 function crawUpdates(novel, callback) {
     var pref = novel.href;
+    console.log("home crawl "+novel.href);
     crawlPage(novel.href, function (err, body) {
         try {
-            console.log("home done");
+            console.log("home done "+novel.href);
             var $ = cheerio.load(body);
             var datas = []
             //*[@id="list"]/dl/dd[89]#list > dl > dd:nth-child(6)
@@ -65,10 +65,11 @@ function crawUpdates(novel, callback) {
                 } else {
                     data.no = "";
                 }
+                console.log("data:"+JSON.stringify(data))
                 datas.push(data)
             });
             var count = 0;
-            var maxCount = 10;
+            var maxCount = 0;
             var stop = false;
             if (novel.lastCheck == 0) { // 首次抓取
                 maxCount = 10;
@@ -97,6 +98,7 @@ function crawUpdates(novel, callback) {
                 console.log("crawl "+data.href);
                 crawlPage(data.href, function (err, body) {
                     try {
+                        console.log("crawl done "+data.href);
                         var $ = cheerio.load(body);
                         var chapter = {}
                         chapter.content = $('#content').html();
@@ -108,8 +110,12 @@ function crawUpdates(novel, callback) {
                         chapter.author = novel.author;
                         createAt = new Date().getTime();
                         updateAt= createAt;
-                        var entity = new Chapter(chapter)
-                        entity.save()
+
+                        Chapter.update({"no":chapter.no, "nid":chapter.nid}, chapter, {upsert:true}).exec(function (err, resData) {
+                            if(!resData){
+                                console.log("insert a new chapter for "+chapter.nid+" into db");
+                            }
+                        })
                     } catch (e) {
                     }
                 })
@@ -168,8 +174,8 @@ function getMoreNo(title, index) {
         return "0";
     }
 }
-
 function crawlPage(url, callback) {
+    var count ={}
     var options = {
         method: 'GET',
         url: url,
@@ -179,39 +185,24 @@ function crawlPage(url, callback) {
             "gzip": "true"
         }
     };
-    var count = 0;
-    var done = false;
+
+    count["count_"+url]=0;
     function requestData() {
-        count++;
-        if(done){
+        count["count_"+url]=count["count_"+url]+1;
+        if(parseInt(count["count_"+url]) > maxtry){
             return;
         }
-        console.log("requestData " + count+ " url:"+url)
+        console.log("requestData " + count["count_"+url]+ " url:"+url)
         request(options, function (error, response, body) {
-            if(done){
-                return;
-            }
             if (error) {
-                if (count > 4) {
-                    clearInterval(interval);
-                    callback(error, null);
-                } else {
-                    console.log("er:"+error.message)
-                }
+                console.log("crawl err:"+url+" msg:"+error.message);
+               requestData();
             } else {
-                clearInterval(interval);
                 callback(null, body);
-                done = true;
             }
         });
     }
-
-    var period = 6000; // 6 second
     requestData();
-    var interval = setInterval(function () {
-        console.log("execut get date interval")
-        requestData()
-    }, period);
 }
 
 module.exports = {

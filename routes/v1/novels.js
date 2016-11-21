@@ -7,6 +7,7 @@ var unfind = "unfind";
 var bodyParser = require('body-parser'); // parses information from POST
 var methodOverride = require('method-override'); //used to manipulate POST
 var Novel = mongoose.model('Novel');
+var User = mongoose.model('User');
 var User2Novel = mongoose.model('User2Novel');
 var Chapter = mongoose.model('Chapter');
 var httputil = require("../../utils/crawlutil")
@@ -58,6 +59,7 @@ router.get('/search',
                             .find("span")
                             .each(function (iidx, eelement) {
                                 var text = $(this).text().trim();
+                                console.log("count:"+count+" text:"+text)
                                 if (count == 1) {
                                     data.author = text;
                                 } else if (count == 3) {
@@ -67,6 +69,7 @@ router.get('/search',
                                 } else if (count == 7) {
                                     data.latest = text;
                                 }
+                                count++;
                             })
                         $(this).find('.result-game-item-detail')
                             .find('.result-game-item-info')
@@ -176,23 +179,15 @@ router.post('/subscribe',
                                     }
                                 );
                             } else {
-                                // uid: { type: String, index: true},
-                                // nid: { type: String, index: true},
-                                // lastRead: { type: String},
-                                // lastUpdate: { type: Number, default:0},
-                                // title:  { type: String, index: true},
-                                // desc:{type:String},
-                                // author:  { type: String, index:true},
-                                // href:{type:String},
-                                // type:{type:String},
-                                // image: { type: String, default:"/images/channelbrand.jpg"},
-                                // latest:{type:String},
                                 data.title = novel.title;
                                 data.desc = novel.desc;
                                 data.author = novel.author;
                                 data.href = novel.href;
                                 data.type = novel.type;
                                 data.image = novel.image;
+                                data.latest = novel.latest;
+                                data.lastUpdate = novel.no;
+                                data.lastRead = novel.no;
                                 User2Novel.create(data, function (err, entity) {
                                     if (err) {
                                         res.status(500).json(
@@ -202,6 +197,7 @@ router.post('/subscribe',
                                             }
                                         );
                                     } else {
+                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id}}).exec()
                                         res.json({
                                             status: 200,
                                             data: entity
@@ -232,9 +228,8 @@ router.post('/:id/subscribe',
         });
 
 
-        var newCreate = false;
         Novel
-            .find({'_id':req.params.id})
+            .find({'_id': req.params.id})
             .exec()
             .then((datas)=> {
                 return new Promise((resolve, reject)=> {
@@ -285,6 +280,9 @@ router.post('/:id/subscribe',
                                             }
                                         );
                                     } else {
+                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id}}).exec(err, function (res) {
+                                            console.log("res:"+res+" err:"+err)
+                                        })
                                         res.json({
                                             status: 200,
                                             data: entity
@@ -300,7 +298,7 @@ router.post('/:id/subscribe',
 
 
 router.get('/:id', function (req, res, next) {
-    console.log("id:"+req.params.id);
+    console.log("id:" + req.params.id);
     Novel.findById(req.params.id, function (err, entity) {
         if (err) {
             next(err);
@@ -322,17 +320,38 @@ router.get('/:id', function (req, res, next) {
     });
 });
 
+router.get('/chapters/:id', function (req, res, next) {
+    console.log("id:" + req.params.id);
+    Chapter.findById(req.params.id, function (err, entity) {
+        if (err) {
+            next(err);
+        } else {
+            if (entity) {
+                res.json({
+                    status: 200,
+                    data: entity,
+                })
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到相关章节"
+                    }
+                );
+            }
+        }
+    });
+});
 
 /**
  * undelete entity
  */
 router.post('/:id/unsubscribe',
     validateToken, function (req, res) {
-        var topic = req.topic;
         var user = req.user;
         var conditions = {};
-        conditions.userId = user._id;
-        conditions.novelId = req.params.id;
+        conditions.nid = req.params.id;
+        conditions.uid = user._id;
         User2Novel.remove(conditions, function (err, entity) {
             if (err) {
                 res.status(200).json(
@@ -343,7 +362,9 @@ router.post('/:id/unsubscribe',
                 );
                 return;
             }
-            if (entity.n > 0) {
+            entity = JSON.parse(entity);
+            if (parseInt(entity["n"]) > 0) {
+                User.update({"_id": req.user._id}, {$pop: {"novels": req.params._id}}).exec()
                 res.json({
                     status: 200,
                 })
@@ -389,11 +410,11 @@ router.get('/:id/chapters', function (req, res) {
  * 支持分页查询
  */
 router.post('/crawl', function (req, res) {
-    console.log("start crawl chapters")
     var date = new Date();
-
+    var time = date.getTime() - 60000;
+    console.log("start crawl chapters time:"+time)
     Novel
-        .find({'lastCheck': {$lt: date.getTime() - 1800000}})
+        .find({'lastCheck': {$lt: time}})
         .exec()
         .then((datas)=> {
             console.log("need crawl novel size:" + datas.length)
