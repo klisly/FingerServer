@@ -161,8 +161,8 @@ router.post('/subscribe',
             })
             .then((novel)=> {
                 var data = {};
-                data.userId = req.user._id;
-                data.novelId = novel._id;
+                data.uid = req.user._id;
+                data.nid = novel._id;
                 User2Novel
                     .find(data)
                     .exec()
@@ -176,6 +176,23 @@ router.post('/subscribe',
                                     }
                                 );
                             } else {
+                                // uid: { type: String, index: true},
+                                // nid: { type: String, index: true},
+                                // lastRead: { type: String},
+                                // lastUpdate: { type: Number, default:0},
+                                // title:  { type: String, index: true},
+                                // desc:{type:String},
+                                // author:  { type: String, index:true},
+                                // href:{type:String},
+                                // type:{type:String},
+                                // image: { type: String, default:"/images/channelbrand.jpg"},
+                                // latest:{type:String},
+                                data.title = novel.title;
+                                data.desc = novel.desc;
+                                data.author = novel.author;
+                                data.href = novel.href;
+                                data.type = novel.type;
+                                data.image = novel.image;
                                 User2Novel.create(data, function (err, entity) {
                                     if (err) {
                                         res.status(500).json(
@@ -198,7 +215,92 @@ router.post('/subscribe',
             .catch((err)=>next(err));
     });
 
+
+/**
+ * subscribe entity
+ */
+router.post('/:id/subscribe',
+    validateToken, function (req, res, next) {
+
+        var ep = new eventproxy();
+        ep.fail(next);
+        ep.on(pro_error, function (msg) {
+            res.status(400).json({
+                status: 40001,
+                msg: msg,
+            })
+        });
+
+
+        var newCreate = false;
+        Novel
+            .find({'_id':req.params.id})
+            .exec()
+            .then((datas)=> {
+                return new Promise((resolve, reject)=> {
+                    if (datas.length > 0) {
+                        resolve(datas[0]);
+                    } else {
+                        res.status(404).json(
+                            {
+                                status: 404,
+                                msg: "小说不存在"
+                            }
+                        );
+                    }
+                })
+            })
+            .then((novel)=> {
+                var data = {};
+                data.uid = req.user._id;
+                data.nid = novel._id;
+                User2Novel
+                    .find(data)
+                    .exec()
+                    .then((datas)=> {
+                        return new Promise((resolve, reject)=> {
+                            if (datas.length > 0) {
+                                res.status(200).json(
+                                    {
+                                        status: 403,
+                                        msg: "已经订阅"
+                                    }
+                                );
+                            } else {
+                                data.title = novel.title;
+                                data.desc = novel.desc;
+                                data.author = novel.author;
+                                data.href = novel.href;
+                                data.type = novel.type;
+                                data.image = novel.image;
+                                data.latest = novel.latest;
+                                data.lastUpdate = novel.no;
+                                data.lastRead = novel.no;
+                                User2Novel.create(data, function (err, entity) {
+                                    if (err) {
+                                        res.status(500).json(
+                                            {
+                                                status: 500,
+                                                msg: err.message
+                                            }
+                                        );
+                                    } else {
+                                        res.json({
+                                            status: 200,
+                                            data: entity
+                                        });
+                                    }
+                                })
+                            }
+                        })
+                    })
+            })
+            .catch((err)=>next(err));
+    });
+
+
 router.get('/:id', function (req, res, next) {
+    console.log("id:"+req.params.id);
     Novel.findById(req.params.id, function (err, entity) {
         if (err) {
             next(err);
@@ -286,12 +388,12 @@ router.get('/:id/chapters', function (req, res) {
 /**
  * 支持分页查询
  */
-router.get('/crawl', function (req, res) {
+router.post('/crawl', function (req, res) {
     console.log("start crawl chapters")
     var date = new Date();
 
     Novel
-        .find({'lastCheck': {$lt: date.getTime() - 3600000}})
+        .find({'lastCheck': {$lt: date.getTime() - 1800000}})
         .exec()
         .then((datas)=> {
             console.log("need crawl novel size:" + datas.length)

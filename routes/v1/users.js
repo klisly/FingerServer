@@ -6,6 +6,8 @@ var Article = mongoose.model('Article');
 var User2Topic = mongoose.model('User2Topic');
 var User2Site = mongoose.model('User2Site');
 var User2Article = mongoose.model('User2Article')
+var User2Novel = mongoose.model('User2Novel')
+
 var eventproxy = require('eventproxy');
 var userProxy = require("../../proxy/user");
 var getRandomAvatar = require("../../utils/avatarutil").getRandomAvatar
@@ -979,5 +981,84 @@ router.get('/:uid/shares', function (req, res) {
         });
 });
 
+
+/**
+ * list collect articles
+ */
+router.get('/:uid/novels', function (req, res) {
+    var conditions = {};
+    conditions.uid = req.params.uid;
+    User2Novel.find(conditions)
+        .sort({'lastUpdate': -1})
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
+
+
+/**
+ * 获取用户尚未读的更新章节
+ */
+router.get('/:uid/chapters', function (req, res) {
+    var conditions = {};
+    conditions.uid = req.params.uid;
+    User2Novel.find(conditions)
+        .sort({'lastUpdate': -1})
+        .exec(function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                res.format({
+                    json: function () {
+                        res.json({
+                            status: 200,
+                            data: entity
+                        });
+                    }
+                });
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到该记录"
+                    }
+                );
+                return;
+            }
+        });
+});
 
 module.exports = router;

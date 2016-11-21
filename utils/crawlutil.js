@@ -75,7 +75,7 @@ function crawUpdates(novel, callback) {
             }
             var newest = datas[datas.length - 1];
             Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
-            User2Novel.update({"novelId":novel._id.toString()},{"lastUpdate":new Date().getTime()}).exec()
+            User2Novel.update({"novelId":novel._id.toString()},{"lastUpdate":newest.no, "latest":newest.title}).exec()
 
             datas.reverse().forEach(function (data) {
                 if (stop) {
