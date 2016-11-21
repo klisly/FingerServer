@@ -197,6 +197,30 @@ router.post('/subscribe',
             })
             .catch((err)=>next(err));
     });
+
+router.get('/:id', function (req, res, next) {
+    Novel.findById(req.params.id, function (err, entity) {
+        if (err) {
+            next(err);
+        } else {
+            if (entity) {
+                res.json({
+                    status: 200,
+                    data: entity,
+                })
+            } else {
+                res.status(404).json(
+                    {
+                        status: 404,
+                        message: "没有找到相关小说"
+                    }
+                );
+            }
+        }
+    });
+});
+
+
 /**
  * undelete entity
  */
@@ -241,7 +265,7 @@ router.get('/:id/chapters', function (req, res) {
     query.where("updateAt").lt(new Date().getTime());
     query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
-    query.limit(pageSize * 1);                                                
+    query.limit(pageSize * 1);
     query.sort('-no desc');
     query.exec(function (err, entity) {
         if (err) {
@@ -265,14 +289,14 @@ router.get('/:id/chapters', function (req, res) {
 router.get('/crawl', function (req, res) {
     console.log("start crawl chapters")
     var date = new Date();
-    
+
     Novel
-        .find({'lastCheck': {$lt:date.getTime() - 3600000}})
+        .find({'lastCheck': {$lt: date.getTime() - 3600000}})
         .exec()
         .then((datas)=> {
-            console.log("need crawl novel size:"+datas.length)
-            for(var index = 0; index < datas.length; index++){
-                console.log("index:"+index);
+            console.log("need crawl novel size:" + datas.length)
+            for (var index = 0; index < datas.length; index++) {
+                console.log("index:" + index);
                 crawl(datas[index]);
             }
         })

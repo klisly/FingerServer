@@ -19,6 +19,6 @@ module.exports = function () {
                 console.log(body);
             }
         });
-    }, null, false, 'America/Los_Angeles');
+    }, null, false, 'Asia/Shanghai');
     task.start();
 }
