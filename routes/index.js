@@ -45,7 +45,7 @@ router.get('/', function (req, res, next) {
     if (data.topics == "段子") {
         sels = sels + " content "
     }
-    if( topic == "推荐"){
+    if (topic == "推荐") {
         page = 1;
     }
     data.page = page;
@@ -53,7 +53,7 @@ router.get('/', function (req, res, next) {
     data.siteId = req.query.siteId
     data.topic = topic
     var location = "topic";
-    if(data.siteId){
+    if (data.siteId) {
         location = "site";
     }
     query.select(sels)
@@ -61,7 +61,7 @@ router.get('/', function (req, res, next) {
         if (err) {
             next(err)
         } else {
-            res.render('index', {location:location, opts:data, articles:entity});
+            res.render('index', {location: location, opts: data, articles: entity});
         }
     });
 });
@@ -77,17 +77,14 @@ var MAG_SIZE = 10;
 router.get('/maggen', function (req, res, next) {
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
-    console.log("time:"+ d);
+    console.log("time:" + d);
     var data = {};
-    data.topics = {"$ne":"段子"}
-    // data.updateAt = {"$gt":(now.getTime() -  43200000)}
+    data.topics = {"$ne": "段子"}
+    data.updateAt = {"$gt": (now.getTime() - 43200000)}
     var query = Article.find(data);
     query.sort({'heartCount': -1})
     var sels = 'title publishAt author authorId site siteId srcUrl ' +
         'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
-    if(data.topics == "段子" ){
-        sels = sels+" content "
-    }
     query.select(sels);
     query.limit(RECOM_SIZE);
     console.log("start query");
@@ -95,25 +92,28 @@ router.get('/maggen', function (req, res, next) {
         if (err) {
             console.log("query result: err:" + JSON.stringify(err));
         } else {
-            if(entity.length < MAG_SIZE){
+            if (entity.length < MAG_SIZE) {
                 return;
             }
+            var hour = now.getHours();
+            console.log("query mag size:" + entity.length + "now:" + now + " hour:" + hour);
             var data = {}
             var articles = [];
-            var start = common.getRandomNum(0, RECOM_SIZE-MAG_SIZE-1);
-            for(var index = 0; index < MAG_SIZE; index++){
-                articles.push(entity[start+index])
+            var start = common.getRandomNum(0, entity.length);
+            for (var index = 0; index < MAG_SIZE; index++) {
+                if (entity[(start + index) % entity.length]) {
+                    articles.push(entity[(start + index) % entity.length])
+                }
             }
-            var hour = now.getHours();
-            data.no = d + (hour < 12 ? '早报':'晚报');
+            data.no = d + ((hour + 8) / 24 < 12 ? '早一刻' : '晚一刻'); // +GM000时间标准
             data.articles = articles;
             data.createAt = new Date().getTime();
             data.updateAt = new Date().getTime();
-            console.log("data:"+JSON.stringify(data))
+            console.log("data:" + JSON.stringify(data))
             Magzine.create(data, function (err, entity) {
                 if (err) {
                     if (err.code == 11000) {
-                       console.log('已经存在');
+                        console.log('已经存在');
                         return;
                     }
                 } else {
@@ -131,7 +131,6 @@ router.get('/maggen', function (req, res, next) {
     });
 
 });
-
 
 
 module.exports = router;
