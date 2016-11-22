@@ -43,7 +43,25 @@ h1{
 }
 
 .srcurl{
-    display: block;
     font-size: 0.85em;
-    color: darkgray;
+    padding-left: 2%;
+}
+
+
+.downloadapk{
+    font-size: 1em;
+    padding: 2% 2% 2% 2%;
+    position: relative;
+    background-color:#f8a09c;
+    text-align: center;
+    margin: 0 auto;
+    border: 2px;
+    border-color: #6cf8a09c;
+}
+.downloadapk a{
+    color: #fafafa;
+}
+
+.downloadapk a:hover{
+    color: white;
 }

@@ -9,6 +9,9 @@ block content
             div.aw-content-wrap.clearfix
 
                 div.col-sm-12.col-md-9.aw-main-content
+                    div.downloadapk
+                        a(href="/softs/android-app-release.apk")
+                            | 点我下载客户端,阅读更多的文章。
                     div.headinfo
                         h1
                             | #{article.title}
@@ -16,8 +19,7 @@ block content
                             | 时间:&nbsp;#{moment(article.createAt).utc().utcOffset(+8).format("MM-DD HH:mm")}&nbsp;&nbsp;&nbsp;&nbsp;来源:&nbsp;#{article.site}
                     div(id="content")
                         |!{article.content}
-                    div.aw-footer
-                        span.srcurl
+                    div.srcurl
                             a(href="#{article.srcUrl}")
                                 | 查看原文
                 <!-- 侧边栏 -->
