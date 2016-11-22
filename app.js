@@ -25,7 +25,7 @@ var version = require("./model/version");
 require("./model/Novel")
 require("./model/Chapter")
 require("./model/user2novel");
-
+process.env.TZ = 'Asia/Shanghai'
 var app = express();
 
 // view engine setup

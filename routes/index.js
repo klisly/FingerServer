@@ -77,7 +77,11 @@ var MAG_SIZE = 10;
 router.get('/maggen', function (req, res, next) {
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
-    console.log("time:" + d);
+    var hour = now.getHours();
+    if(hour != 7 && hour != 19){
+        return;
+    }
+    console.log("it is time to gen mag");
     var data = {};
     data.topics = {"$ne": "段子"}
     data.updateAt = {"$gt": (now.getTime() - 43200000)}
@@ -95,7 +99,6 @@ router.get('/maggen', function (req, res, next) {
             if (entity.length < MAG_SIZE) {
                 return;
             }
-            var hour = now.getHours();
             console.log("query mag size:" + entity.length + "now:" + now + " hour:" + hour);
             var data = {}
             var articles = [];
@@ -105,7 +108,7 @@ router.get('/maggen', function (req, res, next) {
                     articles.push(entity[(start + index) % entity.length])
                 }
             }
-            data.no = d + ((hour + 8) / 24 < 12 ? '早一刻' : '晚一刻'); // +GM000时间标准
+            data.no = d + (hour < 12 ? '早一刻' : '晚一刻'); // +GM+8时间标准
             data.articles = articles;
             data.createAt = new Date().getTime();
             data.updateAt = new Date().getTime();
