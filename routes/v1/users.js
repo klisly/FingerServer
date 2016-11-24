@@ -1029,8 +1029,9 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
     var conditions = {};
     conditions.nid = {$in:req.user.novels}
     conditions.updateAt = {$gt:new Date().getTime() - 86400000}
+    console.log("get daily udpate chapter conditions:"+JSON.stringify(conditions));
     Chapter.find(conditions)
-        .sort({'lastUpdate': -1, "nname":-1})
+        .sort({'no': -1, "nname":-1})
         .select('no title href nid nname author updateAt createAt')
         .exec(function (err, entity) {
             if (err) {

@@ -33,7 +33,6 @@ exports.validateToken = function (req, res, next) {
     var token = (req.body && req.body.access_token) || parsed_url.query.access_token || req.headers["x-access-token"];
     redisClient.get(token, function (err, reply) {
         if (err) {
-            console.log(err);
             res.status(500)
                 .json(
                     {
@@ -69,9 +68,17 @@ exports.validateToken = function (req, res, next) {
                         return;
                     }
                     userProxy.getUsersById(decoded.iss, function (err, entity) {
-                        if (!err) {
+                        if (!err && entity) {
                             req.user = entity;
                             return next();
+                        } else {
+                            res.status(401)
+                                .json(
+                                    {
+                                        msg: "token invalid",
+                                        status: 401
+                                    })
+                                .end();
                         }
                     })
                 } catch (err) {
@@ -85,7 +92,6 @@ exports.validateToken = function (req, res, next) {
                             status: 401
                         })
                     .end();
-                return;
             }
         }
     });

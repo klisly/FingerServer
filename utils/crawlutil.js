@@ -7,11 +7,11 @@ var User2Novel = mongoose.model('User2Novel');
 var _ = require("lodash")
 var maxtry = 3;
 function search(name, callback) {
-    var url = 'http://zhannei.baidu.com/cse/search?s='+name;
+    var url = 'http://zhannei.baidu.com/cse/search?q='+name;
     var count ={}
     var options = {
         method: 'GET',
-        url: 'http://zhannei.baidu.com/cse/search',
+        url: 'http://so.mianhuatang.la/cse/search',
         qs: {
             click: '1',
             entry: '1',
@@ -56,15 +56,12 @@ function crawUpdates(novel, callback) {
             var $ = cheerio.load(body);
             var datas = []
             //*[@id="list"]/dl/dd[89]#list > dl > dd:nth-child(6)
+            var count = 1;
             $('#list > dl > dd > a').each(function (idx, element) {
                 var data = {}
                 data.href = pref + $(this).attr('href');
                 data.title = $(this).text().trim();
-                if(data.title[0]=="第"){
-                    data.no = getNo(data.title.split(" ")[0]);
-                } else {
-                    data.no = "";
-                }
+                data.no = count++;
                 console.log("data:"+JSON.stringify(data))
                 datas.push(data)
             });
@@ -72,7 +69,7 @@ function crawUpdates(novel, callback) {
             var maxCount = 0;
             var stop = false;
             if (novel.lastCheck == 0) { // 首次抓取
-                maxCount = 10;
+                maxCount = 20;
             }
             var newest = datas[datas.length - 1];
             Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
@@ -108,9 +105,8 @@ function crawUpdates(novel, callback) {
                         chapter.nid = novel._id;
                         chapter.nname = novel.title;
                         chapter.author = novel.author;
-                        createAt = new Date().getTime();
-                        updateAt= createAt;
-
+                        chapter.createAt = new Date().getTime();
+                        chapter.updateAt= chapter.createAt;
                         Chapter.update({"no":chapter.no, "nid":chapter.nid}, chapter, {upsert:true}).exec(function (err, resData) {
                             if(!resData){
                                 console.log("insert a new chapter for "+chapter.nid+" into db");

@@ -59,7 +59,7 @@ router.get('/search',
                             .find("span")
                             .each(function (iidx, eelement) {
                                 var text = $(this).text().trim();
-                                console.log("count:"+count+" text:"+text)
+                                console.log("count:" + count + " text:" + text)
                                 if (count == 1) {
                                     data.author = text;
                                 } else if (count == 3) {
@@ -109,7 +109,7 @@ router.post('/subscribe',
                 msg: msg,
             })
         });
-
+        console.log("subscribe "+JSON.stringify(req.body));
         var data = {};
         if (req.body.title) {
             data.title = validator.trim(req.body.title);
@@ -197,7 +197,8 @@ router.post('/subscribe',
                                             }
                                         );
                                     } else {
-                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id}}).exec()
+                                        Novel.update({"_id": novel._id}, {$inc: {"followerCount": 1}}).exec()
+                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id.toString()}}).exec()
                                         res.json({
                                             status: 200,
                                             data: entity
@@ -217,7 +218,7 @@ router.post('/subscribe',
  */
 router.post('/:id/subscribe',
     validateToken, function (req, res, next) {
-
+        console.log("subscribe by id");
         var ep = new eventproxy();
         ep.fail(next);
         ep.on(pro_error, function (msg) {
@@ -280,8 +281,9 @@ router.post('/:id/subscribe',
                                             }
                                         );
                                     } else {
-                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id}}).exec(err, function (res) {
-                                            console.log("res:"+res+" err:"+err)
+                                        Novel.update({"_id": novel._id}, {$inc: {"followerCount": 1}}).exec()
+                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id.toString()}}).exec(err, function (res) {
+                                            console.log("res:" + res + " err:" + err)
                                         })
                                         res.json({
                                             status: 200,
@@ -297,7 +299,7 @@ router.post('/:id/subscribe',
     });
 
 
-router.get('/:id', function (req, res, next) {
+router.get('/novels/:id', function (req, res, next) {
     console.log("id:" + req.params.id);
     Novel.findById(req.params.id, function (err, entity) {
         if (err) {
@@ -343,6 +345,7 @@ router.get('/chapters/:id', function (req, res, next) {
     });
 });
 
+
 /**
  * undelete entity
  */
@@ -364,18 +367,36 @@ router.post('/:id/unsubscribe',
             }
             entity = JSON.parse(entity);
             if (parseInt(entity["n"]) > 0) {
-                User.update({"_id": req.user._id}, {$pop: {"novels": req.params._id}}).exec()
+                Novel.update({"_id": req.params.id}, {$inc: {"followerCount": -1}}).exec()
+                User.update({"_id": req.user._id}, {$pop: {"novels": req.params.id}}).exec()
                 res.json({
                     status: 200,
                 })
             } else {
                 res.json({
-                    status: 404,
-                    msg: "没有查到符合要求的数据"
+                    status: 200,
                 })
             }
         })
     });
+
+
+/**
+ * undelete entity
+ */
+router.get('/recommend', function (req, res) {
+    Novel
+        .find({})
+        .limit(20)
+        .sort({'updateAt': -1})
+        .exec()
+        .then((datas)=> {
+            res.json({
+                code:200,
+                data:datas,
+            })
+        })
+});
 
 /**
  * 支持分页查询
@@ -385,7 +406,7 @@ router.get('/:id/chapters', function (req, res) {
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var conditions = {"nid": req.params.id};
     var query = Chapter.find(conditions);
-    query.where("updateAt").lt(new Date().getTime());
+    console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);
     query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
@@ -394,6 +415,7 @@ router.get('/:id/chapters', function (req, res) {
         if (err) {
             return next(err);
         } else {
+            console.log("res:"+JSON.stringify(entity))
             res.format({
                 json: function () {
                     res.json({
@@ -411,8 +433,8 @@ router.get('/:id/chapters', function (req, res) {
  */
 router.post('/crawl', function (req, res) {
     var date = new Date();
-    var time = date.getTime() - 60000;
-    console.log("start crawl chapters time:"+time)
+    var time = date.getTime() - 1200000; // 20分钟抓取一次数据
+    console.log("start crawl chapters time:" + time)
     Novel
         .find({'lastCheck': {$lt: time}})
         .exec()
