@@ -87,7 +87,7 @@ function crawUpdates(novel, callback) {
                     stop = true
                     return;
                 }
-                
+
                 if (data.no == "") {
                     return;
                 }
@@ -107,14 +107,16 @@ function crawUpdates(novel, callback) {
                         chapter.author = novel.author;
                         chapter.createAt = new Date().getTime();
                         chapter.updateAt = chapter.createAt;
-                        Chapter.update({
-                            "no": chapter.no,
-                            "nid": chapter.nid
-                        }, chapter, {upsert: true}).exec(function (err, resData) {
-                            if (!resData) {
-                                console.log("insert a new chapter for " + chapter.nid + " into db");
-                            }
-                        })
+                        if (chapter.content.length > 500) {
+                            Chapter.update({
+                                "no": chapter.no,
+                                "nid": chapter.nid
+                            }, chapter, {upsert: true}).exec(function (err, resData) {
+                                if (!resData) {
+                                    console.log("insert a new chapter for " + chapter.nid + " into db");
+                                }
+                            })
+                        }
                     } catch (e) {
                     }
                 })
