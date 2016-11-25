@@ -538,6 +538,10 @@ router.put('/',
             data.followingTopic = validator.trim(req.body.followingTopic);
             entity.followingTopic = data.followingTopic;
         }
+        if (req.body.deviceToken) {
+            data.deviceToken = validator.trim(req.body.deviceToken);
+            entity.deviceToken = data.deviceToken;
+        }
         if (req.body.followingPeople) {
             data.followingPeople = validator.trim(req.body.followingPeople);
             entity.followingPeople = data.followingPeople;

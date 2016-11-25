@@ -11,12 +11,10 @@ var User = mongoose.model('User');
 var User2Novel = mongoose.model('User2Novel');
 var Chapter = mongoose.model('Chapter');
 var httputil = require("../../utils/crawlutil")
-var DEFAULT_PAGE_SIZE = 20; // 默认每页数量
+var DEFAULT_PAGE_SIZE = 10; // 默认每页数量
 var DEFAULT_PAGE = 1; // 默认页号
 var router = express.Router();
 var validateToken = require("../../utils/authutil").validateToken;
-var requireAuth = require("../../utils/authutil").requireAuth;
-var validateRole = require("../../utils/authutil").validateRole;
 var cheerio = require('cheerio')
 
 router.use(bodyParser.urlencoded({extended: true}))
@@ -398,12 +396,20 @@ router.get('/recommend', function (req, res) {
         })
 });
 
+var max_page = 3;
 /**
  * 支持分页查询
  */
 router.get('/:id/chapters', function (req, res) {
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+    if(page > config.max_page){
+        res.json({
+            status:200,
+            data:[]
+        })
+        return;
+    }
     var conditions = {"nid": req.params.id};
     var query = Chapter.find(conditions);
     console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);

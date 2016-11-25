@@ -24,6 +24,7 @@ var objectSchema = new Schema({
     followingSite: { type: Number, default: 0 },
     followingTopic: { type: Number, default: 0 },
     followingPeople: { type: Number, default: 0 },
+    deviceToken:{type:String},
     createAt: { type: Number, default: new Date().getTime() },
     updateAt: { type: Number, default: new Date().getTime() },
     platform:{type: String, default: "LOCAL"} // QQ WEIBO WEIXIN LOCAL

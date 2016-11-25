@@ -22,8 +22,8 @@ var author = require("./model/user");
 var user2site = require("./model/user2site");
 var user2article = require("./model/user2article");
 var version = require("./model/version");
-require("./model/Novel")
-require("./model/Chapter")
+require("./model/novel")
+require("./model/chapter")
 require("./model/user2novel");
 process.env.TZ = 'Asia/Shanghai'
 var app = express();
