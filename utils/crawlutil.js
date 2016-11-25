@@ -63,11 +63,10 @@ function crawUpdates(novel, callback) {
                 data.href = pref + $(this).attr('href');
                 data.title = $(this).text().trim();
                 data.no = count++;
-                console.log("data:" + JSON.stringify(data))
                 datas.push(data)
             });
             var count = 0;
-            var maxCount = 5;
+            var maxCount = 10;
             var stop = false;
             var newest = datas[datas.length - 1];
             Novel.update({"_id": novel._id.toString()}, {
@@ -93,7 +92,7 @@ function crawUpdates(novel, callback) {
                     return;
                 }
                 count++;
-                console.log("crawl " + data.href);
+                console.log("to crawl " + data.href);
                 crawlPage(data.href, function (err, body) {
                     try {
                         console.log("crawl done " + data.href);

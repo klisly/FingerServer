@@ -51,21 +51,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 var indexs = require('./routes/index');
-var apiSplashes = require("./routes/splashes");
-var apiTopics = require("./routes/topics");
-var apiSites = require("./routes/sites");
-
-var apiArticles = require("./routes/articles");
-var apiUsers = require("./routes/users");
-var apiVersions = require("./routes/versions");
 
 app.use('/', indexs);
-app.use("/splashes", apiSplashes);
-app.use("/topics", apiTopics);
-app.use("/sites", apiSites);
-app.use("/articles", apiArticles);
-app.use("/users", apiUsers);
-app.use("/versions", apiVersions);
 
 app.use("/v1/splashes", require('./routes/v1/splashes'));
 app.use("/v1/topics", require('./routes/v1/topics'));

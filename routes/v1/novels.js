@@ -403,6 +403,7 @@ var max_page = 3;
 router.get('/:id/chapters', function (req, res) {
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+    var conditions = {"nid": req.params.id};
     console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);
 
     if(page > config.max_page){
@@ -412,7 +413,6 @@ router.get('/:id/chapters', function (req, res) {
         })
         return;
     }
-    var conditions = {"nid": req.params.id};
     var query = Chapter.find(conditions);
     query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
