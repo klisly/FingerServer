@@ -8,9 +8,10 @@ var entitySchema = new Schema({ //
     type:{type:String},
     image: { type: String, default:"/images/channelbrand.jpg"},
     latest:{type:String},
-    lastCheck:{type:Number, default: 0 },
+    lastCheck:{type:Number, default: 0 }, // 上次阅读
     followerCount: { type: Number, default: 0 },
     articleCount: { type: Number, default: 0 },
+
     updateAt: { type: String, },
 
 });

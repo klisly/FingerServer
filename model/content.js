@@ -7,8 +7,9 @@ var entitySchema = new Schema({ //
     href: {type: String, unique: true},
     nid:{type: String, index: true},
     nname:{type: String},
-    author:{type: String},
+    author:{type: String}, // 作者
     createAt: {type: Number, default: new Date().getTime()},
     updateAt: {type: Number, default: new Date().getTime()},
+
 });
 mongoose.model('Chapter', entitySchema);
