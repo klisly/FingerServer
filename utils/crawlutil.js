@@ -7,8 +7,8 @@ var User2Novel = mongoose.model('User2Novel');
 var _ = require("lodash")
 var maxtry = 3;
 function search(name, callback) {
-    var url = 'http://zhannei.baidu.com/cse/search?q='+name;
-    var count ={}
+    var url = 'http://zhannei.baidu.com/cse/search?q=' + name;
+    var count = {}
     var options = {
         method: 'GET',
         url: 'http://so.mianhuatang.la/cse/search',
@@ -26,33 +26,34 @@ function search(name, callback) {
         }
     };
 
-    count["count_"+url]=0;
+    count["count_" + url] = 0;
     function requestData() {
-        console.log("url:"+url+" Count:"+JSON.stringify(count))
-        count["count_"+url]=count["count_"+url]+1;
-        if(parseInt(count["count_"+url]) > maxtry){
+        console.log("url:" + url + " Count:" + JSON.stringify(count))
+        count["count_" + url] = count["count_" + url] + 1;
+        if (parseInt(count["count_" + url]) > maxtry) {
             return;
         }
-        console.log("requestData " + count["count_"+url]+ " url:"+url)
+        console.log("requestData " + count["count_" + url] + " url:" + url)
         request(options, function (error, response, body) {
             if (error) {
-                console.log("crawl err:"+url);
+                console.log("crawl err:" + url);
                 requestData();
             } else {
                 callback(null, body);
             }
         });
     }
+
     requestData();
 }
 
 
 function crawUpdates(novel, callback) {
     var pref = novel.href;
-    console.log("home crawl "+novel.href);
+    console.log("home crawl " + novel.href);
     crawlPage(novel.href, function (err, body) {
         try {
-            console.log("home done "+novel.href);
+            console.log("home done " + novel.href);
             var $ = cheerio.load(body);
             var datas = []
             //*[@id="list"]/dl/dd[89]#list > dl > dd:nth-child(6)
@@ -62,40 +63,40 @@ function crawUpdates(novel, callback) {
                 data.href = pref + $(this).attr('href');
                 data.title = $(this).text().trim();
                 data.no = count++;
-                console.log("data:"+JSON.stringify(data))
+                console.log("data:" + JSON.stringify(data))
                 datas.push(data)
             });
             var count = 0;
-            var maxCount = 0;
+            var maxCount = 5;
             var stop = false;
-            if (novel.lastCheck == 0) { // 首次抓取
-                maxCount = 20;
-            }
             var newest = datas[datas.length - 1];
-            Novel.update({"_id":novel._id.toString()},{"latest":newest.title, "lastCheck":new Date().getTime()}).exec()
-            User2Novel.update({"novelId":novel._id.toString()},{"lastUpdate":newest.no, "latest":newest.title}).exec()
+            Novel.update({"_id": novel._id.toString()}, {
+                "latest": newest.title,
+                "lastCheck": new Date().getTime()
+            }).exec()
+            User2Novel.update({"novelId": novel._id.toString()}, {
+                "lastUpdate": newest.no,
+                "latest": newest.title
+            }).exec()
 
             datas.reverse().forEach(function (data) {
                 if (stop) {
                     return;
                 }
-                if (maxCount > 0) {
-                    if (count > maxCount) {
-                        stop = true
-                        return;
-                    }
-                } else if (data.title == novel.latest) {
-                    stop = true;
+
+                if (count > maxCount || data.title == novel.latest) {
+                    stop = true
                     return;
                 }
-                if(data.no == ""){
+                
+                if (data.no == "") {
                     return;
                 }
                 count++;
-                console.log("crawl "+data.href);
+                console.log("crawl " + data.href);
                 crawlPage(data.href, function (err, body) {
                     try {
-                        console.log("crawl done "+data.href);
+                        console.log("crawl done " + data.href);
                         var $ = cheerio.load(body);
                         var chapter = {}
                         chapter.content = $('#content').html();
@@ -106,10 +107,13 @@ function crawUpdates(novel, callback) {
                         chapter.nname = novel.title;
                         chapter.author = novel.author;
                         chapter.createAt = new Date().getTime();
-                        chapter.updateAt= chapter.createAt;
-                        Chapter.update({"no":chapter.no, "nid":chapter.nid}, chapter, {upsert:true}).exec(function (err, resData) {
-                            if(!resData){
-                                console.log("insert a new chapter for "+chapter.nid+" into db");
+                        chapter.updateAt = chapter.createAt;
+                        Chapter.update({
+                            "no": chapter.no,
+                            "nid": chapter.nid
+                        }, chapter, {upsert: true}).exec(function (err, resData) {
+                            if (!resData) {
+                                console.log("insert a new chapter for " + chapter.nid + " into db");
                             }
                         })
                     } catch (e) {
@@ -117,61 +121,61 @@ function crawUpdates(novel, callback) {
                 })
             })
         } catch (e) {
-            console.log("e.msg:"+e.message)
+            console.log("e.msg:" + e.message)
         }
     })
 }
 
-function getNo(title){
+function getNo(title) {
     var index = 0;
     var no = ""
-    for(; index < title.length; index++){
-        if(title[index] == "一"){
-            no+='1';
-        } else if(title[index] == "二" || title[index] == "两"){
-            no+='2';
-        } else if(title[index] == "三"){
-            no+='3';
-        } else if(title[index] == "四"){
-            no+='4';
-        } else if(title[index] == "五"){
-            no+='5';
-        } else if(title[index] == "六"){
-            no+='6';
-        } else if(title[index] == "七"){
-            no+='7';
-        } else if(title[index] == "八"){
-            no+='8';
-        } else if(title[index] == "九"){
-            no+='9';
-        } else if(title[index] == "零"){
-            no+=getMoreNo(title, index);
+    for (; index < title.length; index++) {
+        if (title[index] == "一") {
+            no += '1';
+        } else if (title[index] == "二" || title[index] == "两") {
+            no += '2';
+        } else if (title[index] == "三") {
+            no += '3';
+        } else if (title[index] == "四") {
+            no += '4';
+        } else if (title[index] == "五") {
+            no += '5';
+        } else if (title[index] == "六") {
+            no += '6';
+        } else if (title[index] == "七") {
+            no += '7';
+        } else if (title[index] == "八") {
+            no += '8';
+        } else if (title[index] == "九") {
+            no += '9';
+        } else if (title[index] == "零") {
+            no += getMoreNo(title, index);
         }
     }
-    if(title[title.length-2] == "十"){
-        no +='0';
-    } else if(title[title.length-2] == "百"){
-        no +='00';
-    } else if(title[title.length-2] == "千"){
-        no +='000';
+    if (title[title.length - 2] == "十") {
+        no += '0';
+    } else if (title[title.length - 2] == "百") {
+        no += '00';
+    } else if (title[title.length - 2] == "千") {
+        no += '000';
     }
-    if(no == ''){
-        no = title.replace("第", "").replace("章","");
+    if (no == '') {
+        no = title.replace("第", "").replace("章", "");
     }
     return no;
 }
 
 function getMoreNo(title, index) {
-    if(title[index-1] == "千" && title[index+2] == "百"){
+    if (title[index - 1] == "千" && title[index + 2] == "百") {
         return "0";
-    } else if(title[index-1] == "千" && title[index+2] != "十"){
+    } else if (title[index - 1] == "千" && title[index + 2] != "十") {
         return "00";
     } else {
         return "0";
     }
 }
 function crawlPage(url, callback) {
-    var count ={}
+    var count = {}
     var options = {
         method: 'GET',
         url: url,
@@ -182,22 +186,23 @@ function crawlPage(url, callback) {
         }
     };
 
-    count["count_"+url]=0;
+    count["count_" + url] = 0;
     function requestData() {
-        count["count_"+url]=count["count_"+url]+1;
-        if(parseInt(count["count_"+url]) > maxtry){
+        count["count_" + url] = count["count_" + url] + 1;
+        if (parseInt(count["count_" + url]) > maxtry) {
             return;
         }
-        console.log("requestData " + count["count_"+url]+ " url:"+url)
+        console.log("requestData " + count["count_" + url] + " url:" + url)
         request(options, function (error, response, body) {
             if (error) {
-                console.log("crawl err:"+url+" msg:"+error.message);
-               requestData();
+                console.log("crawl err:" + url + " msg:" + error.message);
+                requestData();
             } else {
                 callback(null, body);
             }
         });
     }
+
     requestData();
 }
 
