@@ -16,7 +16,7 @@ var DEFAULT_PAGE = 1; // 默认页号
 var router = express.Router();
 var validateToken = require("../../utils/authutil").validateToken;
 var cheerio = require('cheerio')
-
+var config = require("../../config")
 router.use(bodyParser.urlencoded({extended: true}))
 router.use(methodOverride(function (req, res) {
     if (req.body && typeof req.body === 'object' && '_method' in req.body) {
@@ -403,6 +403,8 @@ var max_page = 3;
 router.get('/:id/chapters', function (req, res) {
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+    console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);
+
     if(page > config.max_page){
         res.json({
             status:200,
@@ -412,7 +414,6 @@ router.get('/:id/chapters', function (req, res) {
     }
     var conditions = {"nid": req.params.id};
     var query = Chapter.find(conditions);
-    console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);
     query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
     query.limit(pageSize * 1);
