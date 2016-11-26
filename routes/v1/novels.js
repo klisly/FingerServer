@@ -58,7 +58,6 @@ router.get('/search',
                             .find("span")
                             .each(function (iidx, eelement) {
                                 var text = $(this).text().trim();
-                                console.log("count:" + count + " text:" + text)
                                 if (count == 1) {
                                     data.author = text;
                                 } else if (count == 3) {

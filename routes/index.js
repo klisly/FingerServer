@@ -67,9 +67,7 @@ router.get('/', function (req, res, next) {
 });
 
 router.get('/test', function (req, res, next) {
-    require("../utils/notifylutil").sendNotify("", function () {
-
-    })
+    require("../utils/crawlutil").crawlProxy();
     res.send();
 });
 
