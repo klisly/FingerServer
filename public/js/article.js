@@ -15,7 +15,7 @@ function getHotTopics() {
             type: "get",
             url: "/topics/hot",
             success: function (data) {
-                if (data.code == '200') {
+                if (data.status == '200') {
                     var html = ""
                     for (var index = 0; index < data.data.length; index++) {
                         var entity = data.data[index];
@@ -45,11 +45,11 @@ function getHotTopics() {
 
 function getHotArticles() {
     $.ajax({
-            type: "GET",
+            type: "POST",
             url: "/articles/hot",
             data: {'topic': $("#topic").text()},
             success: function (data) {
-                if (data.code == '200') {
+                if (data.status == '200') {
 
                     var html = ""
                     for (var index = 0; index < data.data.length; index++) {

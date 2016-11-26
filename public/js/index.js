@@ -30,7 +30,7 @@ function getHostSites() {
             type: "get",
             url: "/topics/hot",
             success: function (data) {
-                if (data.code == '200') {
+                if (data.status == '200') {
                     var html = ""
                     for (var index = 0; index < data.data.length; index++) {
                         var entity = data.data[index];
@@ -60,10 +60,10 @@ function getHostSites() {
 
 function getHotArticles() {
     $.ajax({
-            type: "GET",
+            type: "POST",
             url: "/articles/hot",
             success: function (data) {
-                if (data.code == '200') {
+                if (data.status == '200') {
 
                     var html = ""
                     for (var index = 0; index < data.data.length; index++) {
