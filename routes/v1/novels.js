@@ -450,7 +450,8 @@ router.post('/crawl', function (req, res) {
 
 });
 
-router.post('/notify', function (req, res) {
+router.get('/notify', function (req, res) {
+    console.log("start notify task")
     if(req.query.pass && req.query.pass == config.pass){
         console.log("start notify")
         var condition = {

@@ -2,7 +2,7 @@ var CronJob = require('cron').CronJob;
 var request = require("request");
 var config = require("../config");
 module.exports = function () {
-    var task = new CronJob(config.cronmag, function () {
+    var task = new CronJob(config.cronnotifi, function () {
         var options = {
             method: 'GET',
             url: 'http://127.0.0.1:3000/v1/novels/notify?pass='+config.pass,

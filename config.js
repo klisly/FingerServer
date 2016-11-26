@@ -1,9 +1,9 @@
 module.exports = {
   // cronmag:'*/30 * * * * *', // dev
-  cronmag:'1 */15 * * * *',  // 杂志生成
-  croncrawl:'1 */10 * * * *', // 10分钟抓取一次
-  cronproxy:'1 */15 * * * *', // 10分钟抓取一次
-  cronnotifi:'1 */5 * * * *', // 5分钟通知一次一次
+  cronmag:'1 */15 7,19 * * *',  // 杂志生成
+  croncrawl:'1 */10 0-1,10-23 * * *', // 10分钟抓取一次
+  cronproxy:'1 */15 0-1,10-23 * * *', // 10分钟抓取一次
+  cronnotifi:'1 */5 8-23 * * *', // 5分钟通知一次一次
   max_page:3,
   pass:"3cb028cf2810",
   umeng_master_key:"xh0hpg7adsbhvgttignixvugsen0rfgx", //友盟的推送key

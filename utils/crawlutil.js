@@ -54,7 +54,7 @@ function search(name, callback) {
 
 function crawUpdates(novel, callback) {
     var pref = novel.href;
-    console.log("home crawl " + novel.href);
+    console.log("home crawl " + JSON.stringify(novel));
     crawlPage(novel.href, function (err, body) {
         try {
             console.log("home done " + novel.href);
@@ -119,14 +119,16 @@ function crawUpdates(novel, callback) {
                                 .then((data)=> {
                                     console.log("crawl chapter:" + JSON.stringify(chapter) + " res:" + JSON.stringify(data));
                                     return new Promise((resolve, reject)=> {
-                                        Novel.update({"_id": novel._id.toString(), "no": {"$lt": chapter.no}}, {"$set":updateInfo})
-                                            .exec(function (err, resData) {
-                                                if (err) {
-                                                    reject(err)
-                                                } else {
+                                        var nid = novel._id;
+                                        var latestno = novel.latestno;
+                                        if (latestno < chapter.no) {
+                                            novel.latestno = chapter.no;
+                                            Novel.update({"_id": nid}, {"$set": updateInfo})
+                                                .exec(function (err, resData) {
                                                     resolve(resData)
-                                                }
-                                            })
+                                                })
+                                        }
+
                                     })
                                 })
                                 .then((data)=> {
@@ -135,7 +137,7 @@ function crawUpdates(novel, callback) {
                                         User2Novel.update({
                                             "nid": novel._id.toString(),
                                             "latestno": {"$lt": chapter.no}
-                                        }, {"$set":updateInfo})
+                                        }, {"$set": updateInfo})
                                             .exec(function (err, resData) {
                                                 if (err) {
                                                     reject(err)
@@ -226,6 +228,7 @@ function crawlPage(url, callback) {
             method: 'GET',
             url: url,
             proxy: proxyUri,
+            timeout: 30000,
             headers: {
                 'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
                 'cache-control': 'no-cache',

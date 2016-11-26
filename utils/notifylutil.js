@@ -48,6 +48,7 @@ function sendNotify(devices, title, chapter, author, callback) {
 
         request(options, function (error, response, body) {
             if (error) throw console.log("send notifi err:"+error.message)
+            console.log("send notify result:"+JSON.stringify(body));
         });
     }
 
