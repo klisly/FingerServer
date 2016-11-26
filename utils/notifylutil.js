@@ -27,8 +27,7 @@ function sendNotify(devices, title, chapter, author, callback) {
             }
         }
     }
-
-
+    
     let post_body = JSON.stringify(params)
     console.log("send notify post body:" + post_body);
     let str = util.format('%s%s%s%s', method, url, post_body, app_master_secret);
