@@ -5,7 +5,7 @@ module.exports = function () {
     var task = new CronJob(config.cronmag, function () {
         var options = {
             method: 'GET',
-            url: 'http://127.0.0.1:3000/maggen?pass='+config.pass,
+            url: 'http://127.0.0.1:3000/v1/novels/notify?pass='+config.pass,
             headers: {
                 'postman-token': '6633aa11-aafc-2ae0-7026-3cb028cf2810',
                 'cache-control': 'no-cache',

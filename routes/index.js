@@ -6,9 +6,13 @@ var eventproxy = require('eventproxy');
 var Article = mongoose.model('Article');
 var Magzine = mongoose.model('Magzine');
 var common = new require("../utils/commonutils");
+var User = mongoose.model('User');
+var User2Article = mongoose.model('User2Article')
 var moment = require("moment");
+var config = require('../config')
 var DEFAULT_PAGE_SIZE = 20;
 var DEFAULT_PAGE = 1;
+var unfind = "unfind";
 /* GET home page. */
 var pageNum;
 router.get('/', function (req, res, next) {
@@ -66,6 +70,12 @@ router.get('/', function (req, res, next) {
     });
 });
 
+router.get('/test', function (req, res, next) {
+    require("../utils/notifylutil").sendNotify("", function () {
+
+    })
+    res.send();
+});
 
 router.get('/login', function (req, res, next) {
     res.render('login', {});
@@ -75,10 +85,17 @@ var RECOM_SIZE = 100;
 var MAG_SIZE = 10;
 
 router.get('/maggen', function (req, res, next) {
+    if (!req.query.pass || req.query.pass != config.pass) {
+        res.send("fail");
+        return;
+    } else {
+        res.send("success");
+    }
+
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
     var hour = now.getHours();
-    if(hour != 7 && hour != 19){
+    if (hour != 7 && hour != 19) {
         return;
     }
     console.log("it is time to gen mag");
@@ -125,11 +142,33 @@ router.get('/maggen', function (req, res, next) {
             })
         }
     });
-    res.format({
-        json: function () {
-            res.json({
-                status: 200,
+});
+
+
+router.get('/articles/:id', function (req, res, next) {
+    Article.findById(req.params.id, function (err, entity) {
+        if (err || !entity) {
+            res.status(404)
+            var err = new Error('没有找到文章', req.params.id);
+            err.status = 404;
+            res.format({
+                json: function () {
+                    res.json(
+                        {
+                            status: err.status,
+                            message: err
+                        }
+                    );
+                }
             });
+            //if it is found we continue on
+        } else {
+            var data = {
+                'article': entity,
+                "topic": common.getTopic(entity.topics),
+            }
+            res.render('article', data);
+
         }
     });
 

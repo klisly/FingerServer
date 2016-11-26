@@ -22,7 +22,8 @@ function search(name, callback) {
         headers: {
             'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
             'cache-control': 'no-cache',
-            "gzip": "true"
+            "gzip": "true",
+            "User-Agent":"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/5.0; SLCC2;.NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0"
         }
     };
 
@@ -68,16 +69,9 @@ function crawUpdates(novel, callback) {
             var count = 0;
             var maxCount = 10;
             var stop = false;
-            var newest = datas[datas.length - 1];
             Novel.update({"_id": novel._id.toString()}, {
-                "latest": newest.title,
                 "lastCheck": new Date().getTime()
             }).exec()
-            User2Novel.update({"novelId": novel._id.toString()}, {
-                "lastUpdate": newest.no,
-                "latest": newest.title
-            }).exec()
-
             datas.reverse().forEach(function (data) {
                 if (stop) {
                     return;
@@ -116,6 +110,18 @@ function crawUpdates(novel, callback) {
                                     console.log("insert a new chapter for " + chapter.nid + " into db");
                                 }
                             })
+
+                            Novel.update({"_id": novel._id.toString(), "no": {"$lt": chapter.no}}, {
+                                "latest": chapter.title,
+                                "latestno": chapter.no,
+                                "updateAt": new Date().getTime(),
+                            }).exec()
+
+                            User2Novel.update({"nid": novel._id.toString(), "latestno": {"$lt": chapter.no}}, {
+                                "latestno": chapter.no,
+                                "latest": chapter.title,
+                                "updateAt": new Date().getTime(),
+                            }).exec()
                         }
                     } catch (e) {
                     }
@@ -183,7 +189,8 @@ function crawlPage(url, callback) {
         headers: {
             'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
             'cache-control': 'no-cache',
-            "gzip": "true"
+            "gzip": "true",
+            "User-Agent":"Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/5.0; SLCC2;.NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0"
         }
     };
 

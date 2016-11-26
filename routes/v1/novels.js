@@ -17,6 +17,7 @@ var router = express.Router();
 var validateToken = require("../../utils/authutil").validateToken;
 var cheerio = require('cheerio')
 var config = require("../../config")
+var notifiUtil = require("../../utils/notifylutil")
 router.use(bodyParser.urlencoded({extended: true}))
 router.use(methodOverride(function (req, res) {
     if (req.body && typeof req.body === 'object' && '_method' in req.body) {
@@ -107,7 +108,6 @@ router.post('/subscribe',
                 msg: msg,
             })
         });
-        console.log("subscribe "+JSON.stringify(req.body));
         var data = {};
         if (req.body.title) {
             data.title = validator.trim(req.body.title);
@@ -137,9 +137,6 @@ router.post('/subscribe',
             data.latest = validator.trim(req.body.latest);
         }
 
-        if (req.body.updateAt) {
-            data.updateAt = validator.trim(req.body.updateAt);
-        }
         var newCreate = false;
         Novel
             .find({'title': data.title, "author": data.author})
@@ -149,6 +146,8 @@ router.post('/subscribe',
                     if (datas.length > 0) {
                         resolve(datas[0]);
                     } else {
+                        data.updateAt = new Date().getTime();
+                        data.createAt = new Date().getTime();
                         Novel.create(data, function (err, entity) {
                             if (err) {
                                 reject(err)
@@ -184,7 +183,7 @@ router.post('/subscribe',
                                 data.type = novel.type;
                                 data.image = novel.image;
                                 data.latest = novel.latest;
-                                data.lastUpdate = novel.no;
+                                data.latestno = novel.no;
                                 data.lastRead = novel.no;
                                 User2Novel.create(data, function (err, entity) {
                                     if (err) {
@@ -268,7 +267,7 @@ router.post('/:id/subscribe',
                                 data.type = novel.type;
                                 data.image = novel.image;
                                 data.latest = novel.latest;
-                                data.lastUpdate = novel.no;
+                                data.latestno = novel.no;
                                 data.lastRead = novel.no;
                                 User2Novel.create(data, function (err, entity) {
                                     if (err) {
@@ -280,9 +279,7 @@ router.post('/:id/subscribe',
                                         );
                                     } else {
                                         Novel.update({"_id": novel._id}, {$inc: {"followerCount": 1}}).exec()
-                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id.toString()}}).exec(err, function (res) {
-                                            console.log("res:" + res + " err:" + err)
-                                        })
+                                        User.update({"_id": req.user._id}, {$addToSet: {"novels": novel._id.toString()}}).exec()
                                         res.json({
                                             status: 200,
                                             data: entity
@@ -396,7 +393,6 @@ router.get('/recommend', function (req, res) {
         })
 });
 
-var max_page = 3;
 /**
  * 支持分页查询
  */
@@ -435,24 +431,59 @@ router.get('/:id/chapters', function (req, res) {
     });
 });
 
-/**
- * 支持分页查询
- */
 router.post('/crawl', function (req, res) {
-    var date = new Date();
-    var time = date.getTime() - 1200000; // 20分钟抓取一次数据
-    console.log("start crawl chapters time:" + time)
-    Novel
-        .find({'lastCheck': {$lt: time}})
-        .exec()
-        .then((datas)=> {
-            console.log("need crawl novel size:" + datas.length)
-            for (var index = 0; index < datas.length; index++) {
-                console.log("index:" + index);
-                crawl(datas[index]);
-            }
-        })
-    res.send();
+    if(req.query.pass && req.query.pass == config.pass){
+        var date = new Date();
+        var time = date.getTime() - 1200000; // 20分钟抓取一次数据
+        Novel
+            .find({'lastCheck': {$lt: time}})
+            .exec()
+            .then((datas)=> {
+                for (var index = 0; index < datas.length; index++) {
+                    console.log("try crawl udpate:" + datas[index].title);
+                    crawl(datas[index]);
+                }
+            })
+        res.send("success");
+    } else {
+        res.send("fail");
+    }
+
+});
+
+router.post('/notify', function (req, res) {
+    if(req.query.pass && req.query.pass == config.pass){
+        console.log("start notify")
+        var condition = {
+            $where : "this.notifyno < this.latestno"
+        }
+        Novel
+            .find(condition)
+            .select('_id author title href latest latestno')
+            .exec()
+            .then((datas)=> {
+                datas.forEach(function (data) {
+                    console.log("find need notify novels:"+data)
+                    Novel.update({"_id": data._id}, {$set: {"notifyno": data.latestno, "updateAt":new Date().getTime()}}).exec()
+                    try {
+                        User
+                            .find({"novels": {"$in":[data._id.toString()]}})
+                            .select('deviceToken')
+                            .exec()
+                            .then(function (entities) {
+                                console.log("find need notify devices:"+entities)
+                                notifiUtil.sendNotify(entities, data.title, data.latest, data.auth);
+                            })
+                    } catch (e) {
+                        console.log("error:"+e.message)
+                    }
+                })
+            })
+        res.send("success");
+    } else {
+        res.send("fail");
+    }
+
 });
 
 function crawl(novel) {
