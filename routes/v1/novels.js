@@ -477,13 +477,13 @@ router.get('/notify', function (req, res) {
                                     if(devices.length < 400){
                                         devices.push(entities[index]["deviceToken"]) // 400一组发送消息
                                     } else {
-                                        notifiUtil.sendNotify(devices, data.title, data.latest, data.auth);
+                                        notifiUtil.sendNotify(devices, data.title, data.latest, data.author);
                                         devices = [];
                                         devices.push(entities[index]["deviceToken"]);
                                     }
                                 }
                                 if(devices.length > 0){
-                                    notifiUtil.sendNotify(devices, data.title, data.latest, data.auth);
+                                    notifiUtil.sendNotify(devices, data.title, data.latest, data.author);
                                 }
                             })
                     } catch (e) {

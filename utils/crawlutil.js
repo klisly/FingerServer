@@ -263,8 +263,10 @@ function crawProxy() {
         for (var index = 0; index < ips.length; index++) {
             ipArray.push(ips[index].split(":"))
         }
-        config.ips = ipArray;
-        console.log("ipArray:" + config.ips);
+        if (ipArray.length > 80) {
+            config.ips = ipArray;
+            console.log("ipArray:" + config.ips);
+        }
     })
 }
 module.exports = {

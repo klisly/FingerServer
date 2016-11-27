@@ -9,6 +9,9 @@ function sendNotify(devices, title, chapter, author, callback) {
     let timestamp = new Date().getTime();
     let method = 'POST'
     let url = 'http://msg.umeng.com/api/send'
+    if(author == undefined){
+        author = "";
+    }
     var message={
         "type": "novelupate",
         "title": "指尖书香:《"+title+"》更新了啦",
