@@ -91,53 +91,57 @@ router.get('/maggen', function (req, res, next) {
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
     var hour = now.getHours();
-    if (hour != 8 && hour != 19) {
-        return;
-    }
-    console.log("it is time to gen mag");
-    var data = {};
-    data.topics = {"$ne": "段子"}
-    data.updateAt = {"$gt": (now.getTime() - 43200000)}
-    var query = Article.find(data);
-    query.sort({'heartCount': -1})
-    var sels = 'title publishAt author authorId site siteId srcUrl ' +
-        'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
-    query.select(sels);
-    query.limit(RECOM_SIZE);
-    console.log("start query");
-    query.exec(function (err, entity) {
-        if (err) {
-            console.log("query result: err:" + JSON.stringify(err));
-        } else {
-            if (entity.length < MAG_SIZE) {
-                return;
-            }
-            console.log("query mag size:" + entity.length + "now:" + now + " hour:" + hour);
-            var data = {}
-            var articles = [];
-            var start = common.getRandomNum(0, entity.length);
-            for (var index = 0; index < MAG_SIZE; index++) {
-                if (entity[(start + index) % entity.length]) {
-                    articles.push(entity[(start + index) % entity.length])
+    // if (hour != 8 && hour != 19 && hour != 20) {
+    //     return;
+    // }
+    try {
+        console.log("it is time to gen mag");
+        var data = {};
+        data.topics = {"$ne": "段子"}
+        data.updateAt = {"$gt": (now.getTime() - 43200000)}
+        var query = Article.find(data);
+        query.sort({'heartCount': -1})
+        var sels = 'title publishAt author authorId site siteId srcUrl ' +
+            'topics age heartCount readCount collectCount shareCount commentCount createAt updateAt checked reason isBlock';
+        query.select(sels);
+        query.limit(RECOM_SIZE);
+        console.log("start query");
+        query.exec(function (err, entity) {
+            if (err) {
+                console.log("query result: err:" + JSON.stringify(err));
+            } else {
+                if (entity.length < MAG_SIZE) {
+                    return;
                 }
-            }
-            data.no = d + (hour < 12 ? '朝花' : '夕拾'); // +GM+8时间标准
-            data.articles = articles;
-            data.createAt = new Date().getTime();
-            data.updateAt = new Date().getTime();
-            console.log("data:" + JSON.stringify(data))
-            Magzine.create(data, function (err, entity) {
-                if (err) {
-                    if (err.code == 11000) {
-                        console.log('已经存在');
-                        return;
+                console.log("query mag size:" + entity.length + "now:" + now + " hour:" + hour);
+                var data = {}
+                var articles = [];
+                var start = common.getRandomNum(0, entity.length);
+                for (var index = 0; index < MAG_SIZE; index++) {
+                    if (entity[(start + index) % entity.length]) {
+                        articles.push(entity[(start + index) % entity.length])
                     }
-                } else {
-                    console.log('生成成功');
                 }
-            })
-        }
-    });
+                data.no = d + (hour < 12 ? '朝花' : '夕拾'); // +GM+8时间标准
+                data.articles = articles;
+                data.createAt = new Date().getTime();
+                data.updateAt = new Date().getTime();
+                console.log("data:" + JSON.stringify(data))
+                Magzine.create(data, function (err, entity) {
+                    if (err) {
+                        if (err.code == 11000) {
+                            console.log('已经存在');
+                            return;
+                        }
+                    } else {
+                        console.log('生成成功');
+                    }
+                })
+            }
+        });
+    } catch (e) {
+        console.log("gen mag error:"+e.message);
+    }
 });
 
 
