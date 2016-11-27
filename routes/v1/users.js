@@ -351,6 +351,8 @@ router.post('/login', function (req, res, next) {
  * 修改密码
  */
 router.post('/resetpasswd', function (req, res, next) {
+    var expires = moment().add(7, 'days').valueOf(); // 7天有效期
+
     var loginname = "";
     if (req.body.loginname) {
         loginname = validator.trim(req.body.loginname).toLowerCase();
