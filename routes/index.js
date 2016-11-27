@@ -8,6 +8,7 @@ var Magzine = mongoose.model('Magzine');
 var common = new require("../utils/commonutils");
 var moment = require("moment");
 var DEFAULT_PAGE_SIZE = 20;
+var config = require("../config")
 var DEFAULT_PAGE = 1;
 /* GET home page. */
 var pageNum;
@@ -79,7 +80,8 @@ var RECOM_SIZE = 100;
 var MAG_SIZE = 10;
 
 router.get('/maggen', function (req, res, next) {
-    if (!req.query.pass || req.query.pass != "3cb028cf2810") {
+    console.log("check is time to gen mag");
+    if (!req.query.pass || req.query.pass != config.pass) {
         res.send("fail");
         return;
     } else {
@@ -89,7 +91,7 @@ router.get('/maggen', function (req, res, next) {
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
     var hour = now.getHours();
-    if (hour != 7 && hour != 19) {
+    if (hour != 8 && hour != 19) {
         return;
     }
     console.log("it is time to gen mag");
@@ -119,7 +121,7 @@ router.get('/maggen', function (req, res, next) {
                     articles.push(entity[(start + index) % entity.length])
                 }
             }
-            data.no = d + (hour < 12 ? '早一刻' : '晚一刻'); // +GM+8时间标准
+            data.no = d + (hour < 12 ? '朝花' : '夕拾'); // +GM+8时间标准
             data.articles = articles;
             data.createAt = new Date().getTime();
             data.updateAt = new Date().getTime();

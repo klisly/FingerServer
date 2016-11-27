@@ -102,5 +102,6 @@ app.use(function (err, req, res, next) {
 require('./cron/magzine')()
 require('./cron/crawlchapters')();
 require('./cron/notifyupdate')();
+require('./cron/crawlips')();
 require('./utils/crawlutil').crawlProxy();
 module.exports = app;
