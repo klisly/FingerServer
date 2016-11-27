@@ -472,7 +472,19 @@ router.get('/notify', function (req, res) {
                             .exec()
                             .then(function (entities) {
                                 console.log("find need notify devices:"+entities)
-                                notifiUtil.sendNotify(entities, data.title, data.latest, data.auth);
+                                var devices = [];
+                                for(var index = 0; index < entities.length; index++){
+                                    if(devices.length < 400){
+                                        devices.push(entities[index]["deviceToken"]) // 400一组发送消息
+                                    } else {
+                                        notifiUtil.sendNotify(devices, data.title, data.latest, data.auth);
+                                        devices = [];
+                                        devices.push(entities[index]["deviceToken"]);
+                                    }
+                                }
+                                if(devices.length > 0){
+                                    notifiUtil.sendNotify(devices, data.title, data.latest, data.auth);
+                                }
                             })
                     } catch (e) {
                         console.log("error:"+e.message)
@@ -483,7 +495,6 @@ router.get('/notify', function (req, res) {
     } else {
         res.send("fail");
     }
-
 });
 
 function crawl(novel) {
