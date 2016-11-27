@@ -117,7 +117,6 @@ function crawUpdates(novel, callback) {
                             Chapter.update({"no": chapter.no, "nid": chapter.nid}, chapter, {upsert: true})
                                 .exec()
                                 .then((data)=> {
-                                    console.log("crawl chapter:" + JSON.stringify(chapter) + " res:" + JSON.stringify(data));
                                     return new Promise((resolve, reject)=> {
                                         var nid = novel._id;
                                         var latestno = novel.latestno;
