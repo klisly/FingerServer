@@ -77,7 +77,7 @@ router.get('/login', function (req, res, next) {
 });
 
 var RECOM_SIZE = 100;
-var MAG_SIZE = 10;
+var MAG_SIZE = 6;
 
 router.get('/maggen', function (req, res, next) {
     console.log("check is time to gen mag");
@@ -110,6 +110,7 @@ router.get('/maggen', function (req, res, next) {
             if (err) {
                 console.log("query result: err:" + JSON.stringify(err));
             } else {
+                console.log("magzine size:"+entity.length);
                 if (entity.length < MAG_SIZE) {
                     return;
                 }
