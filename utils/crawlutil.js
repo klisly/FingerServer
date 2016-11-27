@@ -70,10 +70,9 @@ function crawUpdates(novel, callback) {
                 datas.push(data)
             });
             var count = 0;
-            var maxCount = 10;
+            var maxCount = 3;
             var stop = false;
             if (datas.length <= 0) {
-
                 return;
             }
             Novel.update({"_id": novel._id.toString()}, {
