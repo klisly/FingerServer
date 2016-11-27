@@ -76,7 +76,7 @@ router.get('/login', function (req, res, next) {
     res.render('login', {});
 });
 
-var RECOM_SIZE = 100;
+var RECOM_SIZE = 1000;
 var MAG_SIZE = 6;
 
 router.get('/maggen', function (req, res, next) {
@@ -98,7 +98,7 @@ router.get('/maggen', function (req, res, next) {
         console.log("it is time to gen mag");
         var data = {};
         data.topics = {"$ne": "段子"}
-        data.updateAt = {"$gt": (now.getTime() - 43200000)}
+        data.updateAt = {"$gt": (now.getTime() - 43200000*5)}
         var query = Article.find(data);
         query.sort({'heartCount': -1})
         var sels = 'title publishAt author authorId site siteId srcUrl ' +
