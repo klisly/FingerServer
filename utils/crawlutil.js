@@ -8,7 +8,7 @@ var util = require("../utils/commonutils")
 var _ = require("lodash")
 var config = require("../config");
 
-var maxtry = 8;
+var maxtry = 5;
 function search(name, callback) {
     var url = 'http://zhannei.baidu.com/cse/search?q=' + name;
     var count = {}
@@ -51,16 +51,18 @@ function search(name, callback) {
     requestData();
 }
 
-
-function crawUpdates(novel, callback) {
+/**
+ * 抓取小说主页目录,检查是否有更新
+ * @param url
+ * @param callback
+ */
+function crawUpdates(novel) {
     var pref = novel.href;
     console.log("home crawl " + JSON.stringify(novel));
     crawlPage(novel.href, function (err, body) {
-        try {
             console.log("home done " + novel.href);
             var $ = cheerio.load(body);
             var datas = []
-            //*[@id="list"]/dl/dd[89]#list > dl > dd:nth-child(6)
             var count = 1;
             $('#list > dl > dd > a').each(function (idx, element) {
                 var data = {}
@@ -69,146 +71,48 @@ function crawUpdates(novel, callback) {
                 data.no = count++;
                 datas.push(data)
             });
-            var count = 0;
-            var maxCount = 3;
-            var stop = false;
             if (datas.length <= 0) {
                 return;
             }
-            Novel.update({"_id": novel._id.toString()}, {
-                "lastCheck": new Date().getTime()
-            }).exec()
-            datas.reverse().forEach(function (data) {
-                if (stop) {
-                    return;
-                }
+            var nid = novel._id;
+            var latestno = novel.latestno;
+            // 最大的no <= 当前的最新no, 没有发生更新
+            if (latestno >= datas[datas.length - 1].no) {
+                console.log("no new update chapter");
+                return;
+            }
 
-                if (count > maxCount || (novel.lastUpdate > 0 && data.title == novel.latest)) {
-                    stop = true
-                    return;
+            for (var index = datas.length - 1; index >= 0; index--) {
+                console.log("find update chapter " + JSON.stringify(datas[index]));
+                if (datas[index].no <= latestno) {
+                    break; // 跳出循环
                 }
+                let data = datas[index];
+                var chapter = {}
+                chapter.no = data.no;
+                chapter.title = data.title;
+                chapter.href = data.href;
+                chapter.nid = novel._id;
+                chapter.nname = novel.title;
+                chapter.author = novel.author;
+                chapter.createAt = new Date().getTime();
+                chapter.updateAt = chapter.createAt;
+                Chapter.update({"no": chapter.no, "nid": chapter.nid}, chapter, {upsert: true}).exec();
+            }
 
-                if (data.no == "") {
-                    return;
-                }
-                count++;
-                console.log("to crawl " + data.href);
-                crawlPage(data.href, function (err, body) {
-                    try {
-                        console.log("crawl done " + data.href);
-                        var $ = cheerio.load(body);
-                        var chapter = {}
-                        chapter.content = $('#content').html();
-                        chapter.no = data.no;
-                        chapter.title = data.title;
-                        chapter.href = data.href;
-                        chapter.nid = novel._id;
-                        chapter.nname = novel.title;
-                        chapter.author = novel.author;
-                        chapter.createAt = new Date().getTime();
-                        chapter.updateAt = chapter.createAt;
-                        if (chapter.content.length > 500) {
-                            var updateInfo = {
-                                "latest": chapter.title,
-                                "latestno": chapter.no,
-                                "updateAt": new Date().getTime(),
-                            }
-                            Chapter.update({"no": chapter.no, "nid": chapter.nid}, chapter, {upsert: true})
-                                .exec()
-                                .then((data)=> {
-                                    return new Promise((resolve, reject)=> {
-                                        var nid = novel._id;
-                                        var latestno = novel.latestno;
-                                        if (latestno < chapter.no) {
-                                            novel.latestno = chapter.no;
-                                            Novel.update({"_id": nid}, {"$set": updateInfo})
-                                                .exec(function (err, resData) {
-                                                    resolve(resData)
-                                                })
-                                        }
-
-                                    })
-                                })
-                                .then((data)=> {
-                                    console.log("novel udpate:" + JSON.stringify(data));
-                                    return new Promise((resolve, reject)=> {
-                                        User2Novel.update({
-                                            "nid": novel._id.toString(),
-                                            "latestno": {"$lt": chapter.no}
-                                        }, {"$set": updateInfo})
-                                            .exec(function (err, resData) {
-                                                if (err) {
-                                                    reject(err)
-                                                } else {
-                                                    resolve(resData)
-                                                }
-                                            })
-                                    })
-                                }).then((data)=> {
-                                console.log("user2novel udpate:" + JSON.stringify(data));
-                            })
-                                .catch((err)=> {
-                                    console.log("err:" + err.message);
-                                })
-                        }
-                    } catch (e) {
-                    }
-                })
-            })
-        } catch (e) {
-            console.log("e.msg:" + e.message)
+            var updateInfo = {
+                "latest": datas[datas.length - 1].title,
+                "latestno": datas[datas.length - 1].no,
+                "updateAt": new Date().getTime(),
+            }
+            User2Novel.update({"nid": nid}, {"$set": updateInfo}).exec()
+            updateInfo["lastCheck"] = new Date().getTime();
+            Novel.update({"_id": nid}, {"$set": updateInfo}).exec();
         }
-    })
+    )
 }
-//
-// function getNo(title) {
-//     var index = 0;
-//     var no = ""
-//     for (; index < title.length; index++) {
-//         if (title[index] == "一") {
-//             no += '1';
-//         } else if (title[index] == "二" || title[index] == "两") {
-//             no += '2';
-//         } else if (title[index] == "三") {
-//             no += '3';
-//         } else if (title[index] == "四") {
-//             no += '4';
-//         } else if (title[index] == "五") {
-//             no += '5';
-//         } else if (title[index] == "六") {
-//             no += '6';
-//         } else if (title[index] == "七") {
-//             no += '7';
-//         } else if (title[index] == "八") {
-//             no += '8';
-//         } else if (title[index] == "九") {
-//             no += '9';
-//         } else if (title[index] == "零") {
-//             no += getMoreNo(title, index);
-//         }
-//     }
-//     if (title[title.length - 2] == "十") {
-//         no += '0';
-//     } else if (title[title.length - 2] == "百") {
-//         no += '00';
-//     } else if (title[title.length - 2] == "千") {
-//         no += '000';
-//     }
-//     if (no == '') {
-//         no = title.replace("第", "").replace("章", "");
-//     }
-//     return no;
-// }
-//
-// function getMoreNo(title, index) {
-//     if (title[index - 1] == "千" && title[index + 2] == "百") {
-//         return "0";
-//     } else if (title[index - 1] == "千" && title[index + 2] != "十") {
-//         return "00";
-//     } else {
-//         return "0";
-//     }
-// }
+
+
 function crawlPage(url, callback) {
     var count = {}
 
@@ -226,7 +130,7 @@ function crawlPage(url, callback) {
             method: 'GET',
             url: url,
             proxy: proxyUri,
-            timeout: 30000,
+            timeout: 20000,
             headers: {
                 'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
                 'cache-control': 'no-cache',
@@ -237,7 +141,6 @@ function crawlPage(url, callback) {
         if (parseInt(count["count_" + url]) == maxtry || host == undefined) {
             delete options["proxy"];
         }
-        console.log("options:" + JSON.stringify(options));
         count["count_" + url] = count["count_" + url] + 1;
         if (parseInt(count[" " + url]) > maxtry) {
             return;

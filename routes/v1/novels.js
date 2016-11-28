@@ -152,7 +152,8 @@ router.post('/subscribe',
                                 reject(err)
                             } else {
                                 newCreate = true;
-                                resolve(entity);
+                                httputil.crawUpdates(entity) // 新建,初始化抓取目录
+                                resolve(entity)
                             }
                         })
                     }
@@ -400,14 +401,6 @@ router.get('/:id/chapters', function (req, res) {
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var conditions = {"nid": req.params.id};
     console.log("get novel chapters:"+conditions.nid+" "+page+" "+pageSize);
-
-    if(page > config.max_page){
-        res.json({
-            status:200,
-            data:[]
-        })
-        return;
-    }
     var query = Chapter.find(conditions);
     query.select('no title href nid nname author updateAt createAt')
     query.skip((page - 1) * pageSize);
