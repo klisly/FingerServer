@@ -74,7 +74,6 @@ function crawUpdates(novel) {
             if (datas.length <= 0) {
                 return;
             }
-            var nid = novel._id;
             var latestno = novel.latestno;
             // 最大的no <= 当前的最新no, 没有发生更新
             if (latestno >= datas[datas.length - 1].no) {
@@ -92,7 +91,7 @@ function crawUpdates(novel) {
                 chapter.no = data.no;
                 chapter.title = data.title;
                 chapter.href = data.href;
-                chapter.nid = novel._id;
+                chapter.nid = novel._id.toString();
                 chapter.nname = novel.title;
                 chapter.author = novel.author;
                 chapter.createAt = new Date().getTime();
@@ -105,9 +104,9 @@ function crawUpdates(novel) {
                 "latestno": datas[datas.length - 1].no,
                 "updateAt": new Date().getTime(),
             }
-            User2Novel.update({"nid": nid}, {"$set": updateInfo},{"multi":true}).exec()
+            User2Novel.update({"nid": novel._id.toString()}, {"$set": updateInfo},{"multi":true}).exec()
             updateInfo["lastCheck"] = new Date().getTime();
-            Novel.update({"_id": nid}, {"$set": updateInfo}).exec();
+            Novel.update({"_id": novel._id}, {"$set": updateInfo}).exec();
         }
     )
 }
