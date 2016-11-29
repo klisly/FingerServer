@@ -458,30 +458,39 @@ router.get('/notify', function (req, res) {
                 datas.forEach(function (data) {
                     console.log("find need notify novels:"+data)
                     Novel.update({"_id": data._id}, {$set: {"notifyno": data.latestno, "updateAt":new Date().getTime()}}).exec()
-                    try {
-                        User
-                            .find({"novels": {"$in":[data._id.toString()]}})
-                            .select('deviceToken')
-                            .exec()
-                            .then(function (entities) {
-                                console.log("find need notify devices:"+entities)
-                                var devices = [];
-                                for(var index = 0; index < entities.length; index++){
-                                    if(devices.length < 400){
-                                        devices.push(entities[index]["deviceToken"]) // 400一组发送消息
-                                    } else {
-                                        notifiUtil.sendNotify(devices, data.title, data.latest, data.author);
-                                        devices = [];
-                                        devices.push(entities[index]["deviceToken"]);
-                                    }
+                    Chapter
+                        .find({"nid":data._id, "no":data.latestno})
+                        .exec()
+                        .then((chapters)=> {
+                            if(chapters.length > 0){
+                                let cid = chapters[0]._id;
+                                try {
+                                    User
+                                        .find({"novels": {"$in":[data._id.toString()]}})
+                                        .select('deviceToken')
+                                        .exec()
+                                        .then(function (entities) {
+                                            console.log("find need notify devices:"+entities)
+                                            var devices = [];
+                                            for(var index = 0; index < entities.length; index++){
+                                                if(devices.length < 400){
+                                                    devices.push(entities[index]["deviceToken"]) // 400一组发送消息
+                                                } else {
+                                                    notifiUtil.sendNotify(devices, data.title, data.latest, data.author, cid);
+                                                    devices = [];
+                                                    devices.push(entities[index]["deviceToken"]);
+                                                }
+                                            }
+                                            if(devices.length > 0){
+                                                notifiUtil.sendNotify(devices, data.title, data.latest, data.author, cid);
+                                            }
+                                        })
+                                } catch (e) {
+                                    console.log("error:"+e.message)
                                 }
-                                if(devices.length > 0){
-                                    notifiUtil.sendNotify(devices, data.title, data.latest, data.author);
-                                }
-                            })
-                    } catch (e) {
-                        console.log("error:"+e.message)
-                    }
+                            }
+                        })
+                    
                 })
             })
         res.send("success");

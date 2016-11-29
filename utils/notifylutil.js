@@ -3,7 +3,7 @@ var _ = require("lodash")
 var md5 = require('md5');
 var util = require("util");
 var config = require("../config")
-function sendNotify(devices, title, chapter, author, callback) {
+function sendNotify(devices, title, chapter, author, cid) {
     let appkey = config.umeng_app_key
     let app_master_secret = config.umeng_master_key
     let timestamp = new Date().getTime();
@@ -16,7 +16,7 @@ function sendNotify(devices, title, chapter, author, callback) {
         "type": "novelupate",
         "title": "指尖书香:《"+title+"》更新了啦",
         "desc": "小编刚才发现,"+author+"发布了新章节:"+chapter+",快来阅读吧",
-        "target": ""
+        "cid": cid,
     }
     let params = {
         'appkey': appkey,
