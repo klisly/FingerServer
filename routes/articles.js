@@ -100,25 +100,25 @@ router.post('/', function (req, res, next) {
     if (req.body.heartCount) {
         data.heartCount = validator.trim(req.body.heartCount);
     } else {
-        data.heartCount = randomInt({min: 10, max: 20});
+        data.heartCount = 0;
     }
 
     if (req.body.readCount) {
         data.readCount = validator.trim(req.body.readCount);
     } else {
-        data.readCount = randomInt({min: 50, max: 2000});
+        data.readCount = 0;
     }
 
     if (req.body.collectCount) {
         data.collectCount = validator.trim(req.body.collectCount);
     } else {
-        data.collectCount = randomInt({min: 0, max: 15});
+        data.collectCount = 0;
     }
 
     if (req.body.shareCount) {
         data.shareCount = validator.trim(req.body.shareCount);
     } else {
-        data.shareCount = randomInt({min: 0, max: 20});
+        data.shareCount = 0;
     }
 
     if (req.body.publishAt) {
