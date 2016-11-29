@@ -98,7 +98,7 @@ router.get('/maggen', function (req, res, next) {
         console.log("it is time to gen mag");
         var data = {};
         data.topics = {"$ne": "段子"}
-        data.updateAt = {"$gt": (now.getTime() - 43200000*5)}
+        data.updateAt = {"$gt": (now.getTime() - 43200000)}
         var query = Article.find(data);
         query.sort({'heartCount': -1})
         var sels = 'title publishAt author authorId site siteId srcUrl ' +

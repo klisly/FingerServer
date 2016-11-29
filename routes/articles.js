@@ -52,6 +52,113 @@ router.param('id', function (req, res, next, id) {
     });
 });
 
+
+/**
+ * 新增文章
+ */
+router.post('/', function (req, res, next) {
+    var ep = new eventproxy();
+    ep.fail(next);
+    ep.on(pro_error, function (msg) {
+        res.status(400).json({
+            status: 40003,
+            msg: msg,
+        })
+    });
+    var data = {};
+    if (req.body.title) {
+        data.title = validator.trim(req.body.title);
+    }
+    if (req.body.content) {
+        data.content = validator.trim(req.body.content);
+    }
+    if (req.body.author) {
+        data.author = validator.trim(req.body.author);
+    }
+    if (req.body.authorId) {
+        data.authorId = validator.trim(req.body.authorId);
+    }
+
+    if (req.body.site) {
+        data.site = validator.trim(req.body.site);
+    }
+    if (req.body.siteId) {
+        data.siteId = validator.trim(req.body.siteId);
+    }
+    if (req.body.srcUrl) {
+        data.srcUrl = validator.trim(req.body.srcUrl);
+    }
+    if (req.body.topics) {
+        data.topics = validator.trim(req.body.topics);
+        data.topics = data.topics.split(",")
+    }
+
+    if (req.body.age) {
+        data.age = validator.trim(req.body.age);
+    }
+
+    if (req.body.heartCount) {
+        data.heartCount = validator.trim(req.body.heartCount);
+    } else {
+        data.heartCount = randomInt({min: 10, max: 20});
+    }
+
+    if (req.body.readCount) {
+        data.readCount = validator.trim(req.body.readCount);
+    } else {
+        data.readCount = randomInt({min: 50, max: 2000});
+    }
+
+    if (req.body.collectCount) {
+        data.collectCount = validator.trim(req.body.collectCount);
+    } else {
+        data.collectCount = randomInt({min: 0, max: 15});
+    }
+
+    if (req.body.shareCount) {
+        data.shareCount = validator.trim(req.body.shareCount);
+    } else {
+        data.shareCount = randomInt({min: 0, max: 20});
+    }
+
+    if (req.body.publishAt) {
+        data.publishAt = validator.trim(req.body.publishAt);
+    }
+    data.createAt = new Date().getTime();
+    data.updateAt = new Date().getTime();
+    Article.create(data, function (err, entity) {
+        if (err) {
+            if (err.code == 11000) {
+                ep.emit(pro_error, '文章已经存在');
+                return;
+            } else {
+                ep.emit(pro_error, err.message);
+                return;
+            }
+        } else {
+            Site.update({"_id": data.siteId}, {"$inc": {"articleCount": 1}}).exec();
+            Topic.update({"name": common.getTopic(data.topics)}, {"$inc": {"articleCount": 1}}).exec();
+            res.format({
+                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
+                //html: function(){
+                //  // If it worked, set the header so the address bar doesn't still say /adduser
+                //  res.location("blobs");
+                //  // And forward to success page
+                //  res.redirect("/blobs");
+                //},
+                //JSON response will show the newly created blob
+                json: function () {
+                    res.json({
+                        status: 200,
+                        data: req.article
+                    });
+                }
+            });
+        }
+    })
+});
+
+
 /**
  * 热门文章
  *
