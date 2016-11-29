@@ -15,7 +15,7 @@ function sendNotify(devices, title, chapter, author, cid) {
     var message={
         "type": "novelupate",
         "title": "指尖书香:《"+title+"》更新了啦",
-        "desc": "小编刚才发现,"+author+"发布了新章节:"+chapter+",快来阅读吧",
+        "desc": chapter+",快来阅读吧",
         "cid": cid,
     }
     let params = {
