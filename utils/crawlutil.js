@@ -105,7 +105,7 @@ function crawUpdates(novel) {
                 "latestno": datas[datas.length - 1].no,
                 "updateAt": new Date().getTime(),
             }
-            User2Novel.update({"nid": nid}, {"$set": updateInfo}).exec()
+            User2Novel.update({"nid": nid}, {"$set": updateInfo},{"multi":true}).exec()
             updateInfo["lastCheck"] = new Date().getTime();
             Novel.update({"_id": nid}, {"$set": updateInfo}).exec();
         }
