@@ -431,6 +431,7 @@ router.post('/crawl', function (req, res) {
             .find({'lastCheck': {$lt: time}})
             .exec()
             .then((datas)=> {
+                console.log("need to crawl update size:"+datas.length)
                 for (var index = 0; index < datas.length; index++) {
                     console.log("try crawl udpate:" + datas[index].title);
                     crawl(datas[index]);

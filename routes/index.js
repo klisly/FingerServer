@@ -91,9 +91,6 @@ router.get('/maggen', function (req, res, next) {
     var now = new Date();
     var d = moment().utc().utcOffset(+8).format("YYYY-MM-DD");
     var hour = now.getHours();
-    if (hour != 8 && hour != 19) {
-        return;
-    }
     try {
         console.log("it is time to gen mag");
         var data = {};
