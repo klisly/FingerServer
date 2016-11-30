@@ -8,7 +8,7 @@ var util = require("../utils/commonutils")
 var _ = require("lodash")
 var config = require("../config");
 
-var maxtry = 5;
+var maxtry = 3;
 function search(name, callback) {
     var url = 'http://zhannei.baidu.com/cse/search?q=' + name;
     var count = {}
@@ -75,6 +75,9 @@ function crawUpdates(novel) {
                 return;
             }
             var latestno = novel.latestno;
+            var updateInfo = {};
+            updateInfo["lastCheck"] = new Date().getTime();
+            Novel.update({"_id": novel._id.toString()}, {"$set": updateInfo}).exec();
             // 最大的no <= 当前的最新no, 没有发生更新
             if (latestno >= datas[datas.length - 1].no) {
                 console.log("no new update chapter");
@@ -106,7 +109,7 @@ function crawUpdates(novel) {
             }
             User2Novel.update({"nid": novel._id.toString()}, {"$set": updateInfo},{"multi":true}).exec()
             updateInfo["lastCheck"] = new Date().getTime();
-            Novel.update({"_id": novel._id}, {"$set": updateInfo}).exec();
+            Novel.update({"_id": novel._id.toString()}, {"$set": updateInfo}).exec();
         }
     )
 }
