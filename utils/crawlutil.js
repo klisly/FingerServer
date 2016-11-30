@@ -180,7 +180,6 @@ function crawlContent(chapter){
     crawlPage(chapter.href, function (err, body) {
         console.log("crawlContent done " + chapter.href);
         var $ = cheerio.load(body);
-        console.log("content:"+$("#content").html());
         Chapter.update({"_id": chapter._id.toString()}, {"$set": {"content":$("#content").html()}}).exec();
 
     })
