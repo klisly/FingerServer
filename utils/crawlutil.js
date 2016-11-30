@@ -8,7 +8,7 @@ var util = require("../utils/commonutils")
 var _ = require("lodash")
 var config = require("../config");
 
-var maxtry = 3;
+var maxtry = 5;
 function search(name, callback) {
     var url = 'http://zhannei.baidu.com/cse/search?q=' + name;
     var count = {}
@@ -132,7 +132,7 @@ function crawlPage(url, callback) {
             method: 'GET',
             url: url,
             proxy: proxyUri,
-            timeout: 20000,
+            timeout: 15000,
             headers: {
                 'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
                 'cache-control': 'no-cache',

@@ -429,6 +429,7 @@ router.post('/crawl', function (req, res) {
         var time = date.getTime() - 1200000; // 20分钟抓取一次数据
         Novel
             .find({'lastCheck': {$lt: time}})
+            .limit(8)
             .exec()
             .then((datas)=> {
                 console.log("need to crawl update size:"+datas.length)
