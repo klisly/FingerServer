@@ -93,6 +93,82 @@ router.get('/search',
         }
     });
 
+
+
+/**
+ * subscribe entity
+ */
+router.post('/',
+    validateToken, function (req, res, next) {
+
+        var ep = new eventproxy();
+        ep.fail(next);
+        ep.on(pro_error, function (msg) {
+            res.status(400).json({
+                status: 40001,
+                msg: msg,
+            })
+        });
+        var data = {};
+        if (req.body.title) {
+            data.title = validator.trim(req.body.title);
+        }
+
+        if (req.body.desc) {
+            data.desc = validator.trim(req.body.desc);
+        }
+
+        if (req.body.author) {
+            data.author = validator.trim(req.body.author);
+        }
+
+        if (req.body.href) {
+            data.href = validator.trim(req.body.href);
+        }
+
+        if (req.body.type) {
+            data.type = validator.trim(req.body.type);
+        }
+
+        if (req.body.image) {
+            data.image = validator.trim(req.body.image);
+        }
+
+        if (req.body.latest) {
+            data.latest = validator.trim(req.body.latest);
+        }
+
+        var newCreate = false;
+        Novel
+            .find({'title': data.title, "author": data.author})
+            .exec()
+            .then((datas)=> {
+                return new Promise((resolve, reject)=> {
+                    if (datas.length > 0) {
+                        resolve(datas[0]);
+                    } else {
+                        data.updateAt = new Date().getTime();
+                        data.createAt = new Date().getTime();
+                        Novel.create(data, function (err, entity) {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                newCreate = true;
+                                resolve(entity)
+                            }
+                        })
+                    }
+                })
+            })
+            .then((novel)=> {
+               res.json({
+                   status:200
+               })
+            })
+            .catch((err)=>next(err));
+    });
+
+
 /**
  * subscribe entity
  */
@@ -436,6 +512,28 @@ router.post('/crawl', function (req, res) {
                 for (var index = 0; index < datas.length; index++) {
                     console.log("try crawl udpate:" + datas[index].title);
                     crawl(datas[index]);
+                }
+            })
+        res.send("success");
+    } else {
+        res.send("fail");
+    }
+
+});
+
+
+router.post('/crawlcontent', function (req, res) {
+    if(req.query.pass && req.query.pass == config.pass){
+        Chapter
+            .find( { "content": { $exists: false } } )
+            .sort({'updateAt': -1})
+            .limit(8)
+            .exec()
+            .then((datas)=> {
+                console.log("need to crawl content size:"+datas.length)
+                for (var index = 0; index < datas.length; index++) {
+                    console.log("try crawl udpate content:" + datas[index].title);
+                    httputil.crawlContent(datas[index]);
                 }
             })
         res.send("success");

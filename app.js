@@ -103,5 +103,6 @@ require('./cron/magzine')()
 require('./cron/crawlchapters')();
 require('./cron/notifyupdate')();
 require('./cron/crawlips')();
+require("./cron/crawlcontent")();
 require('./utils/crawlutil').crawlProxy();
 module.exports = app;
