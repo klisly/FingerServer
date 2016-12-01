@@ -1039,7 +1039,7 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
     conditions.updateAt = {$gt:new Date().getTime() - 86400000}
     console.log("get daily udpate chapter conditions:"+JSON.stringify(conditions));
     Chapter.find(conditions)
-        .sort({'no': -1, "nname":-1})
+        .sort({ 'no': -1, "nname":-1})
         .select('no title href nid nname author updateAt createAt')
         .exec(function (err, entity) {
             if (err) {
@@ -1052,11 +1052,23 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
                 return;
             }
             if (entity) {
+                var result = [];
+                var countMap = {};
+                for(var index = 0; index < entity.length; index = index + 1){
+                    if(!countMap[entity[index]['nname']]||countMap[entity[index]['nname']] < 5){
+                        result.push(entity[index]);
+                        if(countMap[entity[index]['nname']]){
+                            countMap[entity[index]['nname']] = parseInt(countMap[entity[index]['nname']])+1
+                        } else {
+                            countMap[entity[index]['nname']] = 1
+                        }
+                    }
+                }
                 res.format({
                     json: function () {
                         res.json({
                             status: 200,
-                            data: entity
+                            data: result
                         });
                     }
                 });
