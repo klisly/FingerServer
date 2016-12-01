@@ -1,7 +1,7 @@
 module.exports = {
   cronmag:'1 */15 7,8,18,19 * * *',  // 杂志生成
-  croncrawl:'1 */2 0-1,6-23 * * *', // 每分钟检查一次
-  croncrawlcontent:'1 * * * * *', // 每分钟检查一次
+  croncrawl:'1 */4 0-1,6-23 * * *', // 每分钟检查一次
+  croncrawlcontent:'1 */2 * * * *', // 每分钟检查一次
   cronproxy:'1 */15 0-1,10-23 * * *', // 10分钟抓取一次
   cronnotifi:'1 */3 * * * *', // 3分钟通知一次一次
   max_page:3,

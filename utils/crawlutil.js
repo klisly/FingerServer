@@ -7,6 +7,11 @@ var User2Novel = mongoose.model('User2Novel');
 var util = require("../utils/commonutils")
 var _ = require("lodash")
 var config = require("../config");
+const charset = require('superagent-charset');
+const superagent = require('superagent');
+const proxy = require('superagent-proxy');
+charset(superagent);
+proxy(superagent);
 
 var maxtry = 5;
 function search(name, callback) {
@@ -18,7 +23,7 @@ function search(name, callback) {
         qs: {
             click: '1',
             entry: '1',
-            s: '14041278195252845489',
+            s: '1211228452607586324',
             nsid: '',
             q: name
         },
@@ -57,7 +62,10 @@ function search(name, callback) {
  * @param callback
  */
 function crawUpdates(novel) {
-    var pref = novel.href;
+    var pref = "";
+    if(novel.href.indexOf("biqugezw.com") != -1){
+        pref = 'http://www.biqugezw.com';
+    }
     console.log("home crawl " + JSON.stringify(novel));
     crawlPage(novel.href, function (err, body) {
             console.log("home done " + novel.href);
@@ -128,33 +136,39 @@ function crawlPage(url, callback) {
             port = parseInt(config.ips[index % config.ips.length][1]);
         }
         var proxyUri = 'http://' + host + ':' + port;
-        var options = {
-            method: 'GET',
-            url: url,
-            proxy: proxyUri,
-            timeout: 15000,
-            headers: {
-                'postman-token': '139bd025-2543-1f5d-bd86-08dd9d67f735',
-                'cache-control': 'no-cache',
-                "gzip": "true",
-                "User-Agent": "Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.23 Mobile Safari/537.36"
-            },
-        };
-        if (parseInt(count["count_" + url]) == maxtry || host == undefined) {
-            delete options["proxy"];
-        }
         count["count_" + url] = count["count_" + url] + 1;
         if (parseInt(count[" " + url]) > maxtry) {
             return;
         }
-        request(options, function (error, response, body) {
-            if (error) {
-                console.log("crawl err:" + url + " msg:" + error.message);
-                requestData();
+        if (parseInt(count["count_" + url]) == maxtry || host == undefined) {
+            superagent
+                .get(url)
+                .timeout(15000)
+                .charset("gbk")
+                .set("cache-control","no-cache")
+                .set("gzip","true")
+                .set("User-Agent","Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.23 Mobile Safari/537.36")
+                .end(onresponse);
+        } else {
+            superagent
+                .get(url)
+                .proxy(proxyUri)
+                .timeout(15000)
+                .charset("gbk")
+                .set("cache-control","no-cache")
+                .set("gzip","true")
+                .set("User-Agent","Mozilla/5.0 (Linux; Android 5.1.1; Nexus 6 Build/LYZ28E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.23 Mobile Safari/537.36")
+                .end(onresponse);
+        }
+
+
+        function onresponse (err, res) {
+            if (err || !res.ok) {
+                requestData()
             } else {
-                callback(null, body);
+                callback(null, res.text);
             }
-        });
+        }
     }
 
     requestData();

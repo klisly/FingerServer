@@ -47,13 +47,14 @@ var pro_error = "prop_error";
  * 新增用户
  */
 router.post('/register', function (req, res, next) {
+    console.log("register data:"+JSON.stringify(req.body));
     var loginname = validator.trim(req.body.loginname).toLowerCase();
     var passwd = "";
     if (req.body.passwd !== undefined) {
         passwd = validator.trim(req.body.passwd);
     }
     var name = ""
-    if (req.body.name !== undefined) {
+    if (req.body.name !== undefined && name.length > 0) {
         name = validator.trim(req.body.name);
     } else {
         name = loginname;
@@ -87,6 +88,7 @@ router.post('/register', function (req, res, next) {
             msg: msg,
         })
     });
+
     if ([loginname, passwd, name].some(function (item) {
             return item === '';
         })) {
