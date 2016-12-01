@@ -1034,54 +1034,61 @@ router.get('/:uid/novels', function (req, res) {
  * 获取用户尚未读的更新章节
  */
 router.get('/:uid/chapters', validateToken, function (req, res) {
-    var conditions = {};
-    conditions.nid = {$in:req.user.novels}
-    conditions.updateAt = {$gt:new Date().getTime() - 86400000}
-    console.log("get daily udpate chapter conditions:"+JSON.stringify(conditions));
-    Chapter.find(conditions)
-        .sort({ 'no': -1, "nname":-1})
-        .select('no title href nid nname author updateAt createAt')
-        .exec(function (err, entity) {
-            if (err) {
-                res.status(500).json(
-                    {
-                        status: 500,
-                        message: err.message
-                    }
-                );
-                return;
-            }
-            if (entity) {
-                var result = [];
-                var countMap = {};
-                for(var index = 0; index < entity.length; index = index + 1){
-                    if(!countMap[entity[index]['nname']]||countMap[entity[index]['nname']] < 5){
-                        result.push(entity[index]);
-                        if(countMap[entity[index]['nname']]){
-                            countMap[entity[index]['nname']] = parseInt(countMap[entity[index]['nname']])+1
-                        } else {
-                            countMap[entity[index]['nname']] = 1
+    try {
+        var conditions = {};
+        conditions.nid = {$in: req.user.novels}
+        conditions.updateAt = {$gt: new Date().getTime() - 86400000}
+        console.log("get daily udpate chapter conditions:" + JSON.stringify(conditions));
+        Chapter.find(conditions)
+            .limit(1000)
+            .sort({'no': -1, "nname": -1})
+            .select('no title href nid nname author updateAt createAt')
+            .exec(function (err, entity) {
+                if (err) {
+                    console.log("err, "+err.message)
+                    res.status(500).json(
+                        {
+                            status: 500,
+                            message: err.message
+                        }
+                    );
+                    return;
+                }
+                if (entity) {
+                    var result = [];
+                    var countMap = {};
+                    for (var index = 0; index < entity.length; index = index + 1) {
+                        if (!countMap[entity[index]['nname']] || countMap[entity[index]['nname']] < 5) {
+                            result.push(entity[index]);
+                            if (countMap[entity[index]['nname']]) {
+                                countMap[entity[index]['nname']] = parseInt(countMap[entity[index]['nname']]) + 1
+                            } else {
+                                countMap[entity[index]['nname']] = 1
+                            }
                         }
                     }
+                    console.log("udpates:"+JSON.stringify(result))
+                    res.format({
+                        json: function () {
+                            res.json({
+                                status: 200,
+                                data: result
+                            });
+                        }
+                    });
+                } else {
+                    res.status(404).json(
+                        {
+                            status: 404,
+                            message: "没有找到该记录"
+                        }
+                    );
+                    return;
                 }
-                res.format({
-                    json: function () {
-                        res.json({
-                            status: 200,
-                            data: result
-                        });
-                    }
-                });
-            } else {
-                res.status(404).json(
-                    {
-                        status: 404,
-                        message: "没有找到该记录"
-                    }
-                );
-                return;
-            }
-        });
+            });
+    } catch (e) {
+        console.log("msg:"+e.message);
+    }
 });
 
 module.exports = router;
