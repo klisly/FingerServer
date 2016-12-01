@@ -21,6 +21,7 @@ function search(name, callback) {
         method: 'GET',
         url: 'http://so.mianhuatang.la/cse/search',
         qs: {
+            srt:'dateModified',
             click: '1',
             entry: '1',
             s: '1211228452607586324',
