@@ -501,10 +501,10 @@ router.get('/:id/chapters', function (req, res) {
 router.post('/crawl', function (req, res) {
     if(req.query.pass && req.query.pass == config.pass){
         var date = new Date();
-        var time = date.getTime() - 1200000; // 20分钟抓取一次数据
+        var time = date.getTime() - 720000; // 12分钟抓取一次数据
         Novel
             .find({'lastCheck': {$lt: time}})
-            .limit(8)
+            .limit(20)
             .exec()
             .then((datas)=> {
                 console.log("need to crawl update size:"+datas.length)
@@ -526,7 +526,7 @@ router.post('/crawlcontent', function (req, res) {
         Chapter
             .find( { "content": { $exists: false } } )
             .sort({'updateAt': -1})
-            .limit(8)
+            .limit(15)
             .exec()
             .then((datas)=> {
                 console.log("need to crawl content size:"+datas.length)
