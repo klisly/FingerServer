@@ -998,7 +998,7 @@ router.get('/:uid/novels', function (req, res) {
     var conditions = {};
     conditions.uid = req.params.uid;
     User2Novel.find(conditions)
-        .sort({'lastUpdate': -1})
+        .sort({'updateAt': -1})
         .exec(function (err, entity) {
             if (err) {
                 res.status(500).json(

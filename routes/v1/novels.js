@@ -486,7 +486,6 @@ router.get('/:id/chapters', function (req, res) {
         if (err) {
             return next(err);
         } else {
-            console.log("res:"+JSON.stringify(entity))
             res.format({
                 json: function () {
                     res.json({
