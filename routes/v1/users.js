@@ -1041,7 +1041,7 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
         console.log("get daily udpate chapter conditions:" + JSON.stringify(conditions));
         Chapter.find(conditions)
             .limit(1000)
-            .sort({'no': -1, "nname": -1})
+            .sort({'updateAt': -1, 'no': -1, "nname": -1})
             .select('no title href nid nname author updateAt createAt')
             .exec(function (err, entity) {
                 if (err) {
