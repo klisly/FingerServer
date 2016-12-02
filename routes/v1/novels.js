@@ -501,7 +501,7 @@ router.get('/:id/chapters', function (req, res) {
 router.post('/crawl', function (req, res) {
     if(req.query.pass && req.query.pass == config.pass){
         var date = new Date();
-        var time = date.getTime() - 720000; // 12分钟抓取一次数据
+        var time = date.getTime() - 600000; // 10分钟检查一次是否存在更新
         Novel
             .find({'lastCheck': {$lt: time}})
             .limit(20)

@@ -1067,7 +1067,6 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
                             }
                         }
                     }
-                    console.log("udpates:"+JSON.stringify(result))
                     res.format({
                         json: function () {
                             res.json({
