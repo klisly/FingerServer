@@ -19,7 +19,7 @@ function search(name, callback) {
     var count = {}
     var options = {
         method: 'GET',
-        url: 'http://so.mianhuatang.la/cse/search',
+        url: 'http://zhannei.baidu.com/cse/search',
         qs: {
             click: '1',
             entry: '1',
