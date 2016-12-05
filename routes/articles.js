@@ -126,6 +126,12 @@ router.post('/', function (req, res, next) {
     }
     data.createAt = new Date().getTime();
     data.updateAt = new Date().getTime();
+    if(data.content.length < 25){
+        return res.json({
+            status:200,
+            msg:"fail"
+        })
+    }
     Article.create(data, function (err, entity) {
         if (err) {
             if (err.code == 11000) {
