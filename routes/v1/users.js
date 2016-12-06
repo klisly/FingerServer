@@ -54,7 +54,7 @@ router.post('/register', function (req, res, next) {
         passwd = validator.trim(req.body.passwd);
     }
     var name = ""
-    if (req.body.name !== undefined && name.length > 0) {
+    if (req.body.name !== undefined && req.body.name.length > 0) {
         name = validator.trim(req.body.name);
     } else {
         name = loginname;
