@@ -164,7 +164,6 @@ function crawlPage(url, callback) {
 
         function onresponse (err, res) {
             if (err || !res.ok) {
-                requestData()
             } else {
                 callback(null, res.text);
             }
