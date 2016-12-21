@@ -10,8 +10,8 @@ var config = require("../config");
 const charset = require('superagent-charset');
 const superagent = require('superagent');
 const proxy = require('superagent-proxy');
-charset(superagent);
 proxy(superagent);
+charset(superagent);
 
 var maxtry = 5;
 function search(name, callback) {
