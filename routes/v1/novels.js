@@ -504,7 +504,7 @@ router.post('/crawl', function (req, res) {
         var time = date.getTime() - 900000; // 15分钟检查一次是否存在更新
         Novel
             .find({'lastCheck': {$lt: time}})
-            .limit(10)
+            .limit(5)
             .exec()
             .then((datas)=> {
                 console.log("need to crawl update size:"+datas.length)
@@ -526,7 +526,7 @@ router.post('/crawlcontent', function (req, res) {
         Chapter
             .find( { "content": { $exists: false } } )
             .sort({'updateAt': -1})
-            .limit(15)
+            .limit(5)
             .exec()
             .then((datas)=> {
                 console.log("need to crawl content size:"+datas.length)
