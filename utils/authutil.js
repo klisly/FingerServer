@@ -32,28 +32,28 @@ exports.validateToken = function (req, res, next) {
     var parsed_url = url.parse(req.url, true)
     var token = (req.body && req.body.access_token) || parsed_url.query.access_token || req.headers["x-access-token"];
     redisClient.get(token, function (err, reply) {
-        if (err) {
-            res.status(500)
-                .json(
-                    {
-                        msg: "server error",
-                        status: 500
-                    }
-                ).end();
-            return;
-        }
+        // if (err) {
+        //     res.status(500)
+        //         .json(
+        //             {
+        //                 msg: "server error",
+        //                 status: 500
+        //             }
+        //         ).end();
+        //     return;
+        // }
 
-        if (reply) {
-            res.status(401)
-                .json(
-                    {
-                        msg: "token invalid",
-                        status: 401
-                    }
-                )
-                .end();
-            return
-        } else {
+        // if (reply) {
+        //     res.status(401)
+        //         .json(
+        //             {
+        //                 msg: "token invalid",
+        //                 status: 401
+        //             }
+        //         )
+        //         .end();
+        //     return
+        // } else {
             if (token) {
                 try {
                     var decoded = jwt.decode(token, jwtTokenSecret);
@@ -93,7 +93,7 @@ exports.validateToken = function (req, res, next) {
                         })
                     .end();
             }
-        }
+        // }
     });
 }
 
