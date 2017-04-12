@@ -15,6 +15,7 @@ var splash = require("./model/splash");
 var topic = require("./model/topic");
 var site = require("./model/site");
 var magzine = require("./model/magzine")
+var wxarticle = require("./model/wxarticle");
 
 var user2topic = require("./model/user2topic");
 var article = require("./model/article");
@@ -67,6 +68,7 @@ app.use("/v1/articles", require('./routes/v1/articles'));
 app.use("/v1/users", require('./routes/v1/users'));
 app.use("/v1/novels", require('./routes/v1/novels'));
 app.use("/v1/versions", require('./routes/v1/versions'));
+app.use("/v1/wxarticles", require('./routes/v1/weixin'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
