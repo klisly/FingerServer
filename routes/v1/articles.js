@@ -34,6 +34,7 @@ router.use(methodOverride(function (req, res) {
  *
  */
 router.get('/', function (req, res) {
+
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;

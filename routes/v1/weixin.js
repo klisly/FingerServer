@@ -35,11 +35,12 @@ router.get('/', function (req, res) {
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;
     var afterAt = req.query.afterAt;
-    var tag = req.query.tag;
+    var tags = req.query.topics.split(",");
     console.log("pageSize:" + pageSize + " page:" + page
-        + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " tag:" + tag);
+        + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " tag:" + tags);
 
     var data = {};
+    data.tag = {"$in":tags};
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("update").gt(afterAt).lt(beforeAt);
@@ -52,6 +53,7 @@ router.get('/', function (req, res) {
     }
 
     query.skip((page - 1) * pageSize);
+    query.sort({"update":-1})
     query.limit(pageSize * 1);
     query.exec(function (err, entity) {
         if (err) {
