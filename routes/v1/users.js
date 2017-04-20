@@ -47,7 +47,7 @@ var pro_error = "prop_error";
  * 新增用户
  */
 router.post('/register', function (req, res, next) {
-    console.log("register data:"+JSON.stringify(req.body));
+    console.log("register data:" + JSON.stringify(req.body));
     var loginname = validator.trim(req.body.loginname).toLowerCase();
     var passwd = "";
     if (req.body.passwd !== undefined) {
@@ -71,7 +71,7 @@ router.post('/register', function (req, res, next) {
     if (req.body.gender !== undefined) {
         gender = validator.trim(req.body.gender);
     }
-    
+
     var avatar = getRandomAvatar();
     if (req.body.avatar !== undefined) {
         avatar = validator.trim(req.body.avatar);
@@ -119,7 +119,7 @@ router.post('/register', function (req, res, next) {
                 }
                 console.log("find user done, loginname:" + loginname + " count:" + entity);
                 if (entity) {
-                    if(platform == 'LOCAL'){
+                    if (platform == 'LOCAL') {
                         ep.emit(pro_error, '手机号已经已被使用。');
                     } else {
                         var token = genToken(entity._id, expires);
@@ -154,8 +154,8 @@ router.post('/register', function (req, res, next) {
                         passwd: hash,
                         brief: brief,
                         avatar: avatar,
-                        platform:platform,
-                        gender:gender,
+                        platform: platform,
+                        gender: gender,
                         createAt: Date.now(),
                         updateAt: Date.now(),
                         salt: salt,
@@ -188,7 +188,7 @@ router.post('/register', function (req, res, next) {
                 });
             });
         } else {
-            if(platform == 'LOCAL'){
+            if (platform == 'LOCAL') {
                 ep.emit(pro_error, "昵称 已经被使用");
             } else {
                 var token = genToken(resData._id, expires);
@@ -324,6 +324,7 @@ router.post('/login', function (req, res, next) {
                 var expires = moment().add(7, 'days').valueOf(); // 7天有效期
                 token = genToken(entity._id, expires);
                 var userJson = entity.toJSON();
+                console.log(JSON.stringify(userJson))
                 delete userJson["loginname"];
                 delete userJson["passwd"];
                 delete userJson["salt"];
@@ -486,6 +487,7 @@ router.put('/',
     validateToken,
     requireAuth,
     function (req, res, next) {
+        console.log("update user");
         var entity = req.user;
         var ep = new eventproxy();
         ep.fail(next);
@@ -550,7 +552,18 @@ router.put('/',
             data.followingPeople = validator.trim(req.body.followingPeople);
             entity.followingPeople = data.followingPeople;
         }
-        console.log("receive data:"+data.name);
+
+        if (req.body.wxchannles) {
+            console.log("data:"+JSON.stringify(req.body.wxchannles))
+            // data.wxchannles = validator.trim(req.body.wxchannles).split(",");
+            // entity.wxchannles = data.wxchannles;
+        }
+        if (req.body.topics) {
+            data.topics = validator.trim(req.body.topics).split(",");
+            entity.topics = data.topics;
+        }
+
+        console.log("receive data:" + data.name);
         userProxy.getUserByName(data.name, function (err, resData) {
             if (resData) {
                 try {
@@ -866,40 +879,53 @@ router.get('/:uid/hearts', function (req, res) {
  * list collect articles
  */
 router.get('/:uid/collects', function (req, res) {
-    var conditions = {isBlock: false};
-    conditions.userId = req.params.uid;
-    conditions.collect = true;
-    User2Article.find(conditions)
-        .sort({'updateAt': -1})
-        .exec(function (err, entity) {
-            if (err) {
-                res.status(500).json(
-                    {
-                        status: 500,
-                        message: err.message
-                    }
-                );
-                return;
-            }
-            if (entity) {
-                res.format({
-                    json: function () {
-                        res.json({
-                            status: 200,
-                            data: entity
-                        });
-                    }
-                });
-            } else {
-                res.status(404).json(
-                    {
-                        status: 404,
-                        message: "没有找到该记录"
-                    }
-                );
-                return;
-            }
-        });
+    console.log("collects find collected")
+    var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
+    var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+    var beforeAt = req.query.beforeAt;
+    var afterAt = req.query.afterAt;
+    console.log("pageSize:" + pageSize + " page:" + page
+        + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " uid:" + req.params.uid);
+    let uid = req.params.uid;
+    var data = {collect: true, userId: uid};
+    var query = User2Article.find(data);
+    if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
+        query.where("createAt").gt(afterAt).lt(beforeAt);
+    } else if (beforeAt > 0) {
+        query.where("createAt").lt(beforeAt);
+    } else if (afterAt > 0) {
+        query.where("createAt").gt(afterAt);
+    } else {
+        query.where("createAt").lt(new Date().getTime());
+    }
+
+    query.skip((page - 1) * pageSize);
+    query.sort({"createAt": -1})
+    query.limit(pageSize * 1);
+    query.exec(function (err, entity) {
+        console.log("query result");
+        if (err) {
+            console.log("query result: err:" + JSON.stringify(err));
+            res.format({
+                json: function () {
+                    res.json({
+                        code: 500,
+                        msg: err.message
+                    });
+                }
+            });
+        } else {
+            console.log("query result: size:" + entity.length)
+            res.format({
+                json: function () {
+                    res.status(200).json({
+                        "status": 200,
+                        "data": entity
+                    });
+                }
+            });
+        }
+    });
 });
 
 /**
@@ -1045,7 +1071,7 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
             .select('no title href nid nname author updateAt createAt')
             .exec(function (err, entity) {
                 if (err) {
-                    console.log("err, "+err.message)
+                    console.log("err, " + err.message)
                     res.status(500).json(
                         {
                             status: 500,
@@ -1086,7 +1112,7 @@ router.get('/:uid/chapters', validateToken, function (req, res) {
                 }
             });
     } catch (e) {
-        console.log("msg:"+e.message);
+        console.log("msg:" + e.message);
     }
 });
 

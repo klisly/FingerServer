@@ -3,7 +3,7 @@ var mongoose = require('mongoose');
 var Article = mongoose.model('WxArticle');
 var User = mongoose.model('User');
 var randomInt = require('random-integral');
-var User2Article = mongoose.model('User2Article')
+var User2Article = mongoose.model('User2Wx')
 var validateToken = require("../../utils/authutil").validateToken;
 var requireAuth = require("../../utils/authutil").requireAuth;
 var validator = require('validator');
@@ -40,7 +40,7 @@ router.get('/', function (req, res) {
         + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " tag:" + tags);
 
     var data = {};
-    data.tag = {"$in":tags};
+    data.tag = {"$in": tags};
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("update").gt(afterAt).lt(beforeAt);
@@ -53,7 +53,7 @@ router.get('/', function (req, res) {
     }
 
     query.skip((page - 1) * pageSize);
-    query.sort({"update":-1})
+    query.sort({"update": -1})
     query.limit(pageSize * 1);
     query.exec(function (err, entity) {
         if (err) {
@@ -94,16 +94,106 @@ router.post('/', function (req, res, next) {
     });
     console.log(JSON.stringify(req.body));
     var data = req.body;
-    Article.create(data, function (err, entity) {})
+    Article.create(data, function (err, entity) {
+    })
     res.json();
 });
 
-// route middleware to validate :id
+
+/**
+ * 支持分页查询
+ *
+ */
+router.get('/collected',
+    function (req, res, next) {
+        console.log("find collected")
+        var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
+        var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
+        var beforeAt = req.query.beforeAt;
+        var afterAt = req.query.afterAt;
+        console.log("pageSize:" + pageSize + " page:" + page
+            + " beforeAt:" + beforeAt + " afterAt:" + afterAt + " uid:" + req.query.uid);
+        let uid = req.query.uid;
+        var data = {collect: true, userId: uid};
+        var query = User2Article.find(data);
+        if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
+            query.where("createAt").gt(afterAt).lt(beforeAt);
+        } else if (beforeAt > 0) {
+            query.where("createAt").lt(beforeAt);
+        } else if (afterAt > 0) {
+            query.where("createAt").gt(afterAt);
+        } else {
+            query.where("createAt").lt(new Date().getTime());
+        }
+
+        query.skip((page - 1) * pageSize);
+        query.sort({"createAt": -1})
+        query.limit(pageSize * 1);
+        query.exec(function (err, entity) {
+            console.log("query result");
+            if (err) {
+                console.log("query result: err:" + JSON.stringify(err));
+                res.format({
+                    json: function () {
+                        res.json({
+                            code: 500,
+                            msg: err.message
+                        });
+                    }
+                });
+            } else {
+                console.log("query result: size:" + entity.length)
+                res.format({
+                    json: function () {
+                        res.status(200).json({
+                            "status": 200,
+                            "data": entity
+                        });
+                    }
+                });
+            }
+        });
+
+    });
+
+router.get('/collectstatus/:aid/:uid',
+    function (req, res, next) {
+        console.log("collectstatus")
+        let conditions = {}
+        conditions.userId = req.params.uid;
+        conditions.articleId = req.params.aid;
+        console.log()
+        User2Article.findOne(conditions, function (err, entity) {
+            if (err) {
+                res.status(500).json(
+                    {
+                        status: 500,
+                        message: err.message
+                    }
+                );
+                return;
+            }
+            if (entity) {
+                console.log(JSON.stringify(entity))
+                res.json({
+                    status: 200,
+                    data: entity
+                })
+            } else {
+                res.json({
+                    status: 404,
+                    message: "没有找到"
+                })
+            }
+        });
+    });
+
 router.param('id', function (req, res, next, id) {
+    console.log("id:" + req.params.id)
     Article.findById(id, function (err, entity) {
         if (err || !entity) {
             res.status(404)
-            var err = new Error('没有找到主题', id);
+            var err = new Error('没有找到文章', id);
             err.status = 404;
             res.format({
                 json: function () {
@@ -126,6 +216,18 @@ router.param('id', function (req, res, next, id) {
             next();
         }
     });
+});
+
+
+/**
+ * subscribe entity
+ */
+router.get('/:id', function (req, res) {
+    var entity = req.article;
+    res.json({
+        status: 200,
+        data: entity
+    })
 });
 
 /**
@@ -483,29 +585,19 @@ router.post('/:id/collect',
                     entity.collect = true;
                     entity.isBlock = false;
                     entity.updateAt = new Date().getTime();
-                    entity.update(data, function (err, resData) {
-                        if (err) {
-                            res.status(500).json(
-                                {
-                                    status: 500,
-                                    message: err.message
-                                }
-                            );
-                        } else {
-                            res.format({
-                                json: function () {
-                                    res.json({
-                                        status: 200,
-                                        data: entity
-                                    });
-                                }
-                            });
-                            article.update({collectCount: article.collectCount + 1}, function (err, data) {
-                            });
-                            user.update({collectCount: user.collectCount + 1}, function (err, data) {
+                    entity.save();
+                    res.format({
+                        json: function () {
+                            res.json({
+                                status: 200,
+                                data: entity
                             });
                         }
-                    })
+                    });
+                    article.collectCount = article.collectCount + 1;
+                    article.save();
+                    user.collectCount = user.collectCount + 1;
+                    user.save();
                 } else {
                     res.format({
                         json: function () {
@@ -517,12 +609,21 @@ router.post('/:id/collect',
                     });
                 }
             } else {
+                // userId
+                // articleId
+                // articleName
+                // from
+                // update
+                // img
                 data.userId = user._id;
                 data.articleId = article._id;
                 data.userAvatar = user.avatar;
+                data.href = article.href;
                 data.articleName = article.title;
-                data.siteName = article.siteName;
-                data.siteId = article.siteId;
+                data.account = article.account;
+                data.img = article.img;
+                data.update = article.update;
+                data.tag = article.tag;
                 data.collect = true;
                 User2Article.create(data, function (err, entity) {
                     if (err) {
@@ -542,10 +643,10 @@ router.post('/:id/collect',
                                 });
                             }
                         });
-                        article.update({collectCount: article.collectCount + 1}, function (err, data) {
-                        });
-                        user.update({collectCount: user.collectCount + 1}, function (err, data) {
-                        });
+                        article.collectCount = article.collectCount + 1;
+                        article.save();
+                        user.collectCount = user.collectCount + 1;
+                        user.save();
                     }
                 })
             }
@@ -580,29 +681,19 @@ router.post('/:id/uncollect',
                     data.collect = false;
                     entity.collect = false;
                     entity.isBlock = true;
-                    entity.update(data, function (err, resData) {
-                        if (err) {
-                            res.status(500).json(
-                                {
-                                    status: 500,
-                                    message: err.message
-                                }
-                            );
-                        } else {
-                            res.format({
-                                json: function () {
-                                    res.json({
-                                        status: 200,
-                                        data: entity
-                                    });
-                                }
-                            });
-                            article.update({collectCount: article.collectCount - 1}, function (err, data) {
-                            });
-                            user.update({collectCount: user.collectCount - 1}, function (err, data) {
+                    entity.save();
+                    res.format({
+                        json: function () {
+                            res.json({
+                                status: 200,
+                                data: entity
                             });
                         }
-                    })
+                    });
+                    article.collectCount = article.collectCount - 1;
+                    article.save();
+                    user.collectCount = user.collectCount - 1;
+                    user.save();
                 } else {
                     res.format({
                         json: function () {
@@ -625,83 +716,5 @@ router.post('/:id/uncollect',
         });
     });
 
-/**
- * subscribe entity
- */
-router.post('/:id/share',
-    validateToken,
-    requireAuth, function (req, res) {
-        var article = req.article;
-        var user = req.user;
-        var conditions = {};
-        conditions.userId = user._id;
-        conditions.articleId = article._id;
-        User2Article.findOne(conditions, function (err, entity) {
-            if (err) {
-                return next();
-            }
-            var data = {};
-            if (!entity) {
-                data.userId = user._id;
-                data.articleId = article._id;
-                data.userAvatar = user.avatar;
-                data.articleName = article.title;
-                data.siteName = article.siteName;
-                data.siteId = article.siteId;
-                data.share = true;
-                User2Article.create(data, function (err, entity) {
-                    if (err) {
-                        console.log(err);
-                        res.status(500).json(
-                            {
-                                status: 500,
-                                message: err.message
-                            }
-                        );
-                    } else {
-                        res.format({
-                            json: function () {
-                                res.json({
-                                    status: 200,
-                                    data: entity
-                                });
-                            }
-                        });
-                        user.update({shareCount: user.shareCount + 1}, function (err, data) {
-                        });
-                        article.update({shareCount: user.shareCount + 1}, function (err, data) {
-                        });
-                    }
-                })
-            } else {
-                data = {};
-                data.share = true;
-                entity.share = true;
-                entity.update(data, function (err, resData) {
-                    if (err) {
-                        res.status(500).json(
-                            {
-                                status: 500,
-                                message: err.message
-                            }
-                        );
-                    } else {
-                        res.format({
-                            json: function () {
-                                res.json({
-                                    status: 200,
-                                    data: entity
-                                });
-                            }
-                        });
-                        user.update({shareCount: user.shareCount + 1}, function (err, data) {
-                        });
-                        article.update({shareCount: user.shareCount + 1}, function (err, data) {
-                        });
-                    }
-                })
-            }
-        })
-    });
 
 module.exports = router;

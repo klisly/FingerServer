@@ -7,7 +7,7 @@ var objectSchema = new Schema({
     desc:String,
     account:{type: String, unique: true, index: true},
     ahref:String,
-    update:{type: Number, unique: true, index: true},
+    update:{type: Number, index: true},
     tag:String,
     heartCount:{ type:Number,default:0, index: true},
     readCount:{ type:Number,default:0, index: true},

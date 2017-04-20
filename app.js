@@ -26,6 +26,8 @@ var version = require("./model/version");
 require("./model/novel")
 require("./model/chapter")
 require("./model/user2novel");
+require("./model/user2wx");
+
 process.env.TZ = 'Asia/Shanghai'
 var app = express();
 

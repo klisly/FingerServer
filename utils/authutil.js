@@ -32,68 +32,45 @@ exports.validateToken = function (req, res, next) {
     var parsed_url = url.parse(req.url, true)
     var token = (req.body && req.body.access_token) || parsed_url.query.access_token || req.headers["x-access-token"];
     redisClient.get(token, function (err, reply) {
-        // if (err) {
-        //     res.status(500)
-        //         .json(
-        //             {
-        //                 msg: "server error",
-        //                 status: 500
-        //             }
-        //         ).end();
-        //     return;
-        // }
-
-        // if (reply) {
-        //     res.status(401)
-        //         .json(
-        //             {
-        //                 msg: "token invalid",
-        //                 status: 401
-        //             }
-        //         )
-        //         .end();
-        //     return
-        // } else {
-            if (token) {
-                try {
-                    var decoded = jwt.decode(token, jwtTokenSecret);
-                    if (decoded.exp <= Date.now()) {
+        if (token) {
+            try {
+                var decoded = jwt.decode(token, jwtTokenSecret);
+                if (decoded.exp <= Date.now()) {
+                    res.status(401)
+                        .json(
+                            {
+                                msg: 'Access token has expired',
+                                status: 401
+                            })
+                        .end();
+                    return;
+                }
+                userProxy.getUsersById(decoded.iss, function (err, entity) {
+                    if (!err && entity) {
+                        req.user = entity;
+                        return next();
+                    } else {
                         res.status(401)
                             .json(
                                 {
-                                    msg: 'Access token has expired',
+                                    msg: "token invalid",
                                     status: 401
                                 })
                             .end();
-                        return;
                     }
-                    userProxy.getUsersById(decoded.iss, function (err, entity) {
-                        if (!err && entity) {
-                            req.user = entity;
-                            return next();
-                        } else {
-                            res.status(401)
-                                .json(
-                                    {
-                                        msg: "token invalid",
-                                        status: 401
-                                    })
-                                .end();
-                        }
-                    })
-                } catch (err) {
-                    return next(err);
-                }
-            } else {
-                res.status(401)
-                    .json(
-                        {
-                            msg: 'Access token not exist',
-                            status: 401
-                        })
-                    .end();
+                })
+            } catch (err) {
+                return next(err);
             }
-        // }
+        } else {
+            res.status(401)
+                .json(
+                    {
+                        msg: 'Access token not exist',
+                        status: 401
+                    })
+                .end();
+        }
     });
 }
 
@@ -146,7 +123,7 @@ exports.validateRole = function (req, res, next) {
 }
 
 function hasRight(role, url) {
-    if(role == 0){
+    if (role == 0) {
         return false;
     }
     return true;

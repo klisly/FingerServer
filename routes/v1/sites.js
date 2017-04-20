@@ -59,16 +59,7 @@ router.get('/',
                 if (err) {
                     return console.error(err);
                 } else {
-                    ////respond to both HTML and JSON. JSON responses require 'Accept: application/json;' in the Request Header
                     res.format({
-                        //  //HTML response will render the index.jade file in the views/blobs folder. We are also setting "blobs" to be an accessible variable in our jade view
-                        //  html: function(){
-                        //    res.render('blobs/index', {
-                        //      title: 'All my Blobs',
-                        //      "blobs" : blobs
-                        //    });
-                        //  },
-                        //JSON response will show all blobs in JSON format
                         json: function () {
                             res.json({
                                 status: 200,
@@ -113,14 +104,6 @@ router.post('/',
                 }
             } else {
                 res.format({
-                    //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                    //html: function(){
-                    //  // If it worked, set the header so the address bar doesn't still say /adduser
-                    //  res.location("blobs");
-                    //  // And forward to success page
-                    //  res.redirect("/blobs");
-                    //},
-                    //JSON response will show the newly created blob
                     json: function () {
                         res.json({
                             status: 200,
@@ -138,11 +121,7 @@ router.param('id', function (req, res, next, id) {
     Site.findById(id, function (err, entity) {
         if (err || !entity) {
             next();
-            //if it is found we continue on
         } else {
-            //uncomment this next line if you want to see every JSON document response for every GET/PUT/DELETE call
-            //console.log(blob);
-            // once validation is done save the new item in the req
             req.id = id;
             req.site = entity;
             // go to the next thing
@@ -284,12 +263,7 @@ router.put('/:id',
                 })
                 return;
             } else {
-                //HTML responds by going back to the page or you can be fancy and create a new view that shows a success page.
                 res.format({
-                    //html: function(){
-                    //  res.redirect("/blobs/" + blob._id);
-                    //},
-                    //JSON responds showing the updated values
                     json: function () {
                         res.json({
                             status: 200,
@@ -374,11 +348,6 @@ router.delete('/:id',
             } else {
                 //Returning success messages saying it was deleted
                 res.format({
-                    //HTML returns us back to the main page, or you can create a success page
-                    //html: function(){
-                    //  res.redirect("/blobs");
-                    //},
-                    //JSON returns the item with the message that is has been deleted
                     json: function () {
                         res.json({
                             status: 200,
@@ -406,11 +375,6 @@ router.post('/:id/undelete',
                 return console.error(err);
             } else {
                 res.format({
-                    //HTML returns us back to the main page, or you can create a success page
-                    //html: function(){
-                    //  res.redirect("/blobs");
-                    //},
-                    //JSON returns the item with the message that is has been deleted
                     json: function () {
                         res.json({
                             status: 200,
@@ -455,13 +419,6 @@ router.post('/:id/subscribe',
                             );
                         } else {
                             res.format({
-                                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                                //html: function(){
-                                //  // If it worked, set the header so the address bar doesn't still say /adduser
-                                //  res.location("blobs");
-                                //  // And forward to success page
-                                //  res.redirect("/blobs");
-                                //},
                                 json: function () {
                                     res.json({
                                         status: 200,
@@ -478,13 +435,6 @@ router.post('/:id/subscribe',
                     })
                 } else {
                     res.format({
-                        //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                        //html: function(){
-                        //  // If it worked, set the header so the address bar doesn't still say /adduser
-                        //  res.location("blobs");
-                        //  // And forward to success page
-                        //  res.redirect("/blobs");
-                        //},
                         json: function () {
                             res.json({
                                 status: 200,
@@ -510,13 +460,6 @@ router.post('/:id/subscribe',
                         );
                     } else {
                         res.format({
-                            //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                            //html: function(){
-                            //  // If it worked, set the header so the address bar doesn't still say /adduser
-                            //  res.location("blobs");
-                            //  // And forward to success page
-                            //  res.redirect("/blobs");
-                            //},
                             json: function () {
                                 res.json({
                                     status: 200,
@@ -579,13 +522,6 @@ router.put('/:id/subscribe',
                             return;
                         } else {
                             res.format({
-                                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                                //html: function(){
-                                //  // If it worked, set the header so the address bar doesn't still say /adduser
-                                //  res.location("blobs");
-                                //  // And forward to success page
-                                //  res.redirect("/blobs");
-                                //},
                                 json: function () {
                                     res.json({
                                         status: 200,
@@ -644,13 +580,6 @@ router.post('/:id/unsubscribe',
                             );
                         } else {
                             res.format({
-                                //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                                //html: function(){
-                                //  // If it worked, set the header so the address bar doesn't still say /adduser
-                                //  res.location("blobs");
-                                //  // And forward to success page
-                                //  res.redirect("/blobs");
-                                //},
                                 json: function () {
                                     res.json({
                                         status: 200,
@@ -666,13 +595,6 @@ router.post('/:id/unsubscribe',
                     })
                 } else {
                     res.format({
-                        //HTML response will set the location and redirect back to the home page. You could also create a 'success' page if that's your thing
-                        //html: function(){
-                        //  // If it worked, set the header so the address bar doesn't still say /adduser
-                        //  res.location("blobs");
-                        //  // And forward to success page
-                        //  res.redirect("/blobs");
-                        //},
                         json: function () {
                             res.json({
                                 status: 200,
@@ -692,43 +614,4 @@ router.post('/:id/unsubscribe',
             }
         });
     });
-//
-// /**
-//  * list scribes
-//  */
-// router.get('/subscirbes/:uid', function (req, res) {
-//         var conditions = {};
-//         conditions.userId = req.param('uid');
-//         conditions.isBlock = false;
-//         User2Site.find(conditions, function (err, entities) {
-//             if (err) {
-//                 res.status(500).json(
-//                     {
-//                         status: 500,
-//                         message: err.message
-//                     }
-//                 );
-//                 return;
-//             }
-//             if (entities) {
-//                 res.format({
-//                     json: function () {
-//                         res.json({
-//                             status: 200,
-//                             data: entities
-//                         });
-//                     }
-//                 });
-//             } else {
-//                 res.status(404).json(
-//                     {
-//                         status: 404,
-//                         message: "没有找到该记录"
-//                     }
-//                 );
-//                 return;
-//             }
-//         });
-//     });
-
 module.exports = router;
