@@ -1,0 +1,17 @@
+extends default
+block content
+    style
+        include ../public/css/article.css
+    script
+        include ../public/js/outer.js
+    div.container
+        div.row
+            div.aw-content-wrap.clearfix
+
+                div.col-sm-12.col-md-12.aw-main-content
+                    div.downloadapk
+                        a(href="/softs/android-app-release.apk")
+                            | 点我下载客户端,阅读更多的文章。
+
+                    div(id="content" data-url="#{url}")
+                        |!{url}

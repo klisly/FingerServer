@@ -1,6 +1,7 @@
 var express = require('express');
 var mongoose = require('mongoose');
 var Article = mongoose.model('WxArticle');
+var WxCate = mongoose.model('cate');
 var User = mongoose.model('User');
 var randomInt = require('random-integral');
 var User2Article = mongoose.model('User2Wx')
@@ -31,6 +32,7 @@ router.use(methodOverride(function (req, res) {
  *
  */
 router.get('/', function (req, res) {
+    console.log(req.url)
     var pageSize = req.query.pageSize > 0 ? req.query.pageSize : DEFAULT_PAGE_SIZE;
     var page = req.query.page > 0 ? req.query.page : DEFAULT_PAGE;
     var beforeAt = req.query.beforeAt;
@@ -41,6 +43,7 @@ router.get('/', function (req, res) {
 
     var data = {};
     data.tag = {"$in": tags};
+    console.log(data)
     var query = Article.find(data);
     if (beforeAt > 0 && afterAt > 0 && beforeAt > afterAt) {
         query.where("update").gt(afterAt).lt(beforeAt);
@@ -49,7 +52,8 @@ router.get('/', function (req, res) {
     } else if (afterAt > 0) {
         query.where("update").gt(afterAt);
     } else {
-        query.where("update").lt(new Date().getTime());
+        console.log("cur:" + parseInt(new Date().getTime() / 1000));
+        query.where("update").lt(parseInt(new Date().getTime() / 1000));
     }
 
     query.skip((page - 1) * pageSize);
@@ -99,6 +103,39 @@ router.post('/', function (req, res, next) {
     res.json();
 });
 
+
+/**
+ * 支持分页查询
+ *
+ */
+router.get('/cate', function (req, res) {
+    var data = {};
+    var query = WxCate.find(data);
+    query.sort({"id": 1})
+    query.exec(function (err, entity) {
+        if (err) {
+            console.log("query result: err:" + JSON.stringify(err));
+            res.format({
+                json: function () {
+                    res.json({
+                        code: 500,
+                        msg: err.message
+                    });
+                }
+            });
+        } else {
+            console.log("query result: size:" + entity.length)
+            res.format({
+                json: function () {
+                    res.status(200).json({
+                        "status": 200,
+                        "data": entity
+                    });
+                }
+            });
+        }
+    });
+});
 
 /**
  * 支持分页查询

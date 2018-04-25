@@ -16,6 +16,8 @@ var topic = require("./model/topic");
 var site = require("./model/site");
 var magzine = require("./model/magzine")
 var wxarticle = require("./model/wxarticle");
+var wxcate = require("./model/wxcate");
+var wxorg = require("./model/wxorg")
 
 var user2topic = require("./model/user2topic");
 var article = require("./model/article");
@@ -27,6 +29,7 @@ require("./model/novel")
 require("./model/chapter")
 require("./model/user2novel");
 require("./model/user2wx");
+require("./model/user2wxorg");
 
 process.env.TZ = 'Asia/Shanghai'
 var app = express();
@@ -55,11 +58,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 var indexs = require('./routes/index');
 var apiArticles = require("./routes/articles");
+var apiWxes = require("./routes/wxes");
 var apiTopics = require("./routes/topics");
 var apiSites = require("./routes/sites");
 
 app.use('/', indexs);
 app.use("/articles", apiArticles);
+app.use("/wx", apiWxes);
 app.use("/topics", apiTopics);
 app.use("/sites", apiSites);
 
@@ -71,6 +76,7 @@ app.use("/v1/users", require('./routes/v1/users'));
 app.use("/v1/novels", require('./routes/v1/novels'));
 app.use("/v1/versions", require('./routes/v1/versions'));
 app.use("/v1/wxarticles", require('./routes/v1/weixin'));
+app.use("/v1/wxorgs", require('./routes/v1/weiorg'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

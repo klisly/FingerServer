@@ -24,12 +24,20 @@
         //
         //  </ul>
         //</li>
+        //if location == "wx"
+        //  li.active
+        //    a(href="/") 微信精选
+        //else
+        //  li
+        //    a(href="/") 微信精选
+
         if location == "topic"
           li.active
-            a(href="/") 频道
+            a(href="/?type=wx") 小文学
         else
           li
-            a(href="/") 频道
+            a(href="/?type=wx") 小文学
+
         li
           a(href="/softs/android-app-release.apk") 安卓客户端
         //if location == "site"

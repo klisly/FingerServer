@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var collection = mongoose.model('WxArticle');
+var collection_cate = mongoose.model('cate');
 
 exports.getById = function (uid) {
    return collection.findById(uid).exec();
@@ -45,5 +46,10 @@ exports.findByYield = function *(cons, page, pageSize, sorts) {
         query.sort({createdAt: -1})
     }
     return yield query.exec();
+}
+
+exports.findCates = function () {
+    var query = collection_cate.find({});
+    return query.exec();
 }
 

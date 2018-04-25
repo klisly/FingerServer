@@ -5,7 +5,7 @@ var objectSchema = new Schema({
     href:{type: String, unique: true, index: true},
     img:String,
     desc:String,
-    account:{type: String, unique: true, index: true},
+    account:{type: String, index: true},
     ahref:String,
     update:{type: Number, index: true},
     tag:String,
