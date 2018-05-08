@@ -25,6 +25,8 @@ var author = require("./model/user");
 var user2site = require("./model/user2site");
 var user2article = require("./model/user2article");
 var version = require("./model/version");
+var joke = require("./model/joke");
+
 require("./model/novel")
 require("./model/chapter")
 require("./model/user2novel");
@@ -77,6 +79,7 @@ app.use("/v1/novels", require('./routes/v1/novels'));
 app.use("/v1/versions", require('./routes/v1/versions'));
 app.use("/v1/wxarticles", require('./routes/v1/weixin'));
 app.use("/v1/wxorgs", require('./routes/v1/weiorg'));
+app.use("/v1/joke", require('./routes/v1/joke'));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
