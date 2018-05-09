@@ -66,7 +66,7 @@ var apiSites = require("./routes/sites");
 
 app.use('/', indexs);
 app.use("/articles", apiArticles);
-app.use("/wx", apiWxes);
+// app.use("/wx", apiWxes);
 app.use("/topics", apiTopics);
 app.use("/sites", apiSites);
 

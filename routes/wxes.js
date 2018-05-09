@@ -24,6 +24,7 @@ router.use(methodOverride(function (req, res) {
 }))
 
 router.get('/', function (req, res, next) {
+    console.log("data add")
     let url = req.originalUrl.replace("/wx?ahre=", "");
     res.render('outer', {url:url});
 });
