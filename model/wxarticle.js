@@ -2,18 +2,18 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var objectSchema = new Schema({
     title: String,
-    href:{type: String, unique: true, index: true},
+    href:{type: String},
     img:String,
     desc:String,
-    account:{type: String, index: true},
+    account:{type: String},
     ahref:String,
-    update:{type: Number, index: true},
+    update:{type: Number},
     tag:String,
-    heartCount:{ type:Number,default:0, index: true},
-    readCount:{ type:Number,default:0, index: true},
-    collectCount:{ type:Number,default:0, index: true},
-    shareCount:{ type:Number,default:0, index: true},
-    commentCount:{ type:Number,default:0, index: true},
+    heartCount:{ type:Number,default:0},
+    readCount:{ type:Number,default:0},
+    collectCount:{ type:Number,default:0},
+    shareCount:{ type:Number,default:0},
+    commentCount:{ type:Number,default:0},
 
 });
 mongoose.model('WxArticle', objectSchema);
