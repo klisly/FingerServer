@@ -45,7 +45,7 @@ router.get('/', function (req, res) {
     console.log("condition:" + JSON.stringify(data))
     var query = Joke.find(data);
     query.skip((page - 1) * pageSize);
-    query.sort({"good": -1})
+    query.sort({"pub_time": -1})
     query.limit(pageSize * 1);
     query.exec(function (err, entity) {
         if (err) {
